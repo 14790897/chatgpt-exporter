@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.21.1](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.21.0...userscript-v2.21.1) (2024-03-13)
+
+
+### Bug Fixes
+
+* conversion problems listed in [#222](https://github.com/pionxzh/chatgpt-exporter/issues/222) ([56e6cef](https://github.com/pionxzh/chatgpt-exporter/commit/56e6cef513d8782ec11e1382f0b1a2204b8f77a1))
+* improve release ci ([0fd4af8](https://github.com/pionxzh/chatgpt-exporter/commit/0fd4af89959492791e8a05a65bad82a9bad1e4eb))
+
+## [2.21.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.20.0...userscript-v2.21.0) (2024-02-24)
+
+
+### Features
+
+* add getOobaString and getTavernString for conversion to other formats ([214111b](https://github.com/pionxzh/chatgpt-exporter/commit/214111bc6ce73cbf6ad0f8af9aa577b9eebe9798))
+* remove pandora ([115687d](https://github.com/pionxzh/chatgpt-exporter/commit/115687dbad7f48b3204025b244eb64187fb9ae9f))
+* support export to tavern and ooba format ([a28f9fd](https://github.com/pionxzh/chatgpt-exporter/commit/a28f9fdc353464d32d92a5d977272de324628e3a))
+
+
+### Bug Fixes
+
+* correct model names from 'GTP' to 'GPT' ([43f29e4](https://github.com/pionxzh/chatgpt-exporter/commit/43f29e41fbe95903a23a3763c6f3ba11768f6f9e))
+* **i18n:** use `contohnya` instead of `mis.` in Bahasa translation to avoid confusion ([02909ec](https://github.com/pionxzh/chatgpt-exporter/commit/02909ec0b1ccd3294a67496763d2cd9ba2a5ca4b))
+* update style to follow chatgpt updates ([8ee62f5](https://github.com/pionxzh/chatgpt-exporter/commit/8ee62f52cf2279fb1d06630a77f034bdf4271dd8))
+
+## [2.20.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.19.0...userscript-v2.20.0) (2024-02-13)
+
+
+### Features
+
+* support /gpts paths ([efbd662](https://github.com/pionxzh/chatgpt-exporter/commit/efbd662c772c6e6188b93c166397f1a98cb9baaf))
+
+
+### Bug Fixes
+
+* fix broken style becasue of the updates and improve light style ([ab246ac](https://github.com/pionxzh/chatgpt-exporter/commit/ab246acf905cdb1a550adaeefc90ffc612d03549))
+* improve timestamp injection ([e0eaa65](https://github.com/pionxzh/chatgpt-exporter/commit/e0eaa656f8bdf410e6c3ec78116c427a7fbd57b7))
+* remove weird white rect from the bottom of screenshot export ([fdcf86d](https://github.com/pionxzh/chatgpt-exporter/commit/fdcf86d5d25a3e5cc44fb9db9f5366617bbf0e55))
+
 ## [2.19.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.18.1...userscript-v2.19.0) (2024-01-07)
 
 

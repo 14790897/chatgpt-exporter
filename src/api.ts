@@ -388,14 +388,14 @@ export interface ConversationResult {
 }
 
 const ModelMapping: { [key in ModelSlug]: string } & { [key: string]: string } = {
-    'text-davinci-002-render-sha': 'GTP-3.5',
-    'text-davinci-002-render-paid': 'GTP-3.5',
-    'text-davinci-002-browse': 'GTP-3.5',
+    'text-davinci-002-render-sha': 'GPT-3.5',
+    'text-davinci-002-render-paid': 'GPT-3.5',
+    'text-davinci-002-browse': 'GPT-3.5',
     'gpt-4': 'GPT-4',
     'gpt-4-browsing': 'GPT-4 (Browser)',
 
     // fuzzy matching
-    'text-davinci-002': 'GTP-3.5',
+    'text-davinci-002': 'GPT-3.5',
 }
 
 export function processConversation(conversation: ApiConversationWithId): ConversationResult {
@@ -454,11 +454,14 @@ function extractConversationResult(conversationMapping: Record<string, Conversat
             break // Node not found
         }
 
-        if (node.message?.author.role === 'system') {
-            break // Stop at system message
+        if (node.parent === undefined) {
+            break // Stop at root message.
         }
 
-        result.unshift(node)
+        if (node.message?.author.role !== 'system') { // Skip system messages
+            result.unshift(node)
+        }
+
         currentNodeId = node.parent
     }
 

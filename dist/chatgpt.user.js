@@ -3,7 +3,7 @@
 // @name:zh-CN         ChatGPT Exporter
 // @name:zh-TW         ChatGPT Exporter
 // @namespace          pionxzh
-// @version            2.19.0
+// @version            2.21.1
 // @author             pionxzh
 // @description        Easily export the whole ChatGPT conversation history for further analysis or sharing.
 // @description:zh-CN  轻松导出 ChatGPT 聊天记录，以便进一步分析或分享。
@@ -14,18 +14,10 @@
 // @match              https://chat.openai.com/?model=*
 // @match              https://chat.openai.com/c/*
 // @match              https://chat.openai.com/g/*
+// @match              https://chat.openai.com/gpts
+// @match              https://chat.openai.com/gpts/*
 // @match              https://chat.openai.com/share/*
 // @match              https://chat.openai.com/share/*/continue
-// @match              https://chat.zhile.io/
-// @match              https://chat.zhile.io/?model=*
-// @match              https://chat.zhile.io/c/*
-// @match              https://chat.zhile.io/share/*
-// @match              https://chat.zhile.io/share/*/continue
-// @match              https://chat.oaifree.com/
-// @match              https://chat.oaifree.com/?model=*
-// @match              https://chat.oaifree.com/c/*
-// @match              https://chat.oaifree.com/share/*
-// @match              https://chat.oaifree.com/share/*/continue
 // @require            https://cdn.jsdelivr.net/npm/jszip@3.9.1/dist/jszip.min.js
 // @require            https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js
 // @grant              GM_addStyle
@@ -110,6 +102,31 @@ body[data-time-format="24"] span[data-time-format="24"] {
     background-color: #2f2f2f;
     color: #fff;
     box-shadow: 0 0 0 1px #6f6e77;
+}
+
+html {
+    --ce-text-primary: var(--text-primary, #0d0d0d);
+    --ce-menu-primary: var(--sidebar-surface-primary, #f9f9f9);
+    --ce-menu-secondary: var(--sidebar-surface-secondary, #ececec);
+    --ce-border-light: var(--border-light, rgba(0, 0, 0, .1));
+}
+
+.dark {
+    --ce-text-primary: var(--text-primary, #ececec);
+    --ce-menu-primary: var(--sidebar-surface-primary, #171717);
+    --ce-menu-secondary: var(--sidebar-surface-secondary, #212121);
+}
+
+.text-menu {
+    color: var(--ce-text-primary);
+}
+
+.bg-menu {
+    background-color: var(--ce-menu-primary);
+}
+
+.border-menu {
+    border-color: var(--ce-border-light);
 }
 
 .menu-item {
@@ -230,6 +247,7 @@ body[data-time-format="24"] span[data-time-format="24"] {
     overflow-y: auto;
     padding: 16px 24px;
     z-index: 1001;
+    outline: none;
     animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -412,8 +430,11 @@ body[data-time-format="24"] span[data-time-format="24"] {
 }
 
 .bg-blue-600 {
-    --tw-bg-opacity: 1;
-    background-color: rgb(28 100 242/var(--tw-bg-opacity));
+    background-color: rgb(28 100 242);
+}
+
+.hover\\:bg-gray-500\\/10:hover {
+    background-color: hsla(0, 0%, 61%, .1)
 }
 
 .border-\\[\\#6f6e77\\] {
@@ -425,17 +446,19 @@ body[data-time-format="24"] span[data-time-format="24"] {
 }
 
 .dark .dark\\:bg-white\\/5 {
-    --tw-bg-opacity: 1;
     background-color: rgb(255 255 255 / 5%);
+}
+
+.dark .dark\\:text-gray-200 {
+    color: rgb(229 231 235 / 1);
+}
+
+.dark .dark\\:text-gray-300 {
+    color: rgb(209 213 219 / 1);
 }
 
 .dark .dark\\:border-gray-\\[\\#86858d\\] {
     border-color: #86858d;
-}
-
-
-.fill-current {
-    fill: currentColor;
 }
 
 .gap-x-1 {
@@ -448,10 +471,6 @@ body[data-time-format="24"] span[data-time-format="24"] {
 
 .h-4 {
     height: 1rem;
-}
-
-.h-5 {
-    height: 1.25rem;
 }
 
 .ml-3 {
@@ -1018,15 +1037,12 @@ body[data-time-format="24"] span[data-time-format="24"] {
     return v2 !== void 0 && v2 !== null;
   }
   const API_MAPPING = {
-    "https://chat.openai.com": "https://chat.openai.com/backend-api",
-    "https://chat.zhile.io": "https://chat.zhile.io/backend-api",
-    "https://chat.oaifree.com": "https://chat.oaifree.com/backend-api"
+    "https://chat.openai.com": "https://chat.openai.com/backend-api"
   };
   const baseUrl = new URL(location.href).origin;
   const apiUrl = API_MAPPING[baseUrl];
   const KEY_LANGUAGE = "exporter:language";
   const KEY_FILENAME_FORMAT = "exporter:filename_format";
-  const KEY_OFFICIAL_JSON_FORMAT = "exporter:official_json_format";
   const KEY_TIMESTAMP_ENABLED = "exporter:enable_timestamp";
   const KEY_TIMESTAMP_24H = "exporter:timestamp_24h";
   const KEY_TIMESTAMP_MARKDOWN = "exporter:timestamp_markdown";
@@ -1292,13 +1308,13 @@ body[data-time-format="24"] span[data-time-format="24"] {
     return session;
   }
   const ModelMapping = {
-    "text-davinci-002-render-sha": "GTP-3.5",
-    "text-davinci-002-render-paid": "GTP-3.5",
-    "text-davinci-002-browse": "GTP-3.5",
+    "text-davinci-002-render-sha": "GPT-3.5",
+    "text-davinci-002-render-paid": "GPT-3.5",
+    "text-davinci-002-browse": "GPT-3.5",
     "gpt-4": "GPT-4",
     "gpt-4-browsing": "GPT-4 (Browser)",
     // fuzzy matching
-    "text-davinci-002": "GTP-3.5"
+    "text-davinci-002": "GPT-3.5"
   };
   function processConversation(conversation) {
     var _a;
@@ -1356,10 +1372,12 @@ body[data-time-format="24"] span[data-time-format="24"] {
       if (!node2) {
         break;
       }
-      if (((_a = node2.message) == null ? void 0 : _a.author.role) === "system") {
+      if (node2.parent === void 0) {
         break;
       }
-      result.unshift(node2);
+      if (((_a = node2.message) == null ? void 0 : _a.author.role) !== "system") {
+        result.unshift(node2);
+      }
       currentNodeId = node2.parent;
     }
     return result;
@@ -1910,6 +1928,20 @@ body[data-time-format="24"] span[data-time-format="24"] {
         return ourEventHandler === null || ourEventHandler === void 0 ? void 0 : ourEventHandler(event);
     };
   }
+  function $6ed0406888f73fc4$var$setRef(ref, value) {
+    if (typeof ref === "function")
+      ref(value);
+    else if (ref !== null && ref !== void 0)
+      ref.current = value;
+  }
+  function $6ed0406888f73fc4$export$43e446d32b3d21af(...refs) {
+    return (node2) => refs.forEach(
+      (ref) => $6ed0406888f73fc4$var$setRef(ref, node2)
+    );
+  }
+  function $6ed0406888f73fc4$export$c7b2cbe3552a0d05(...refs) {
+    return T$4($6ed0406888f73fc4$export$43e446d32b3d21af(...refs), refs);
+  }
   function $c512c27ab02ef895$export$50c7b4e9d9f19c1(scopeName, createContextScopeDeps = []) {
     let defaultContexts = [];
     function $c512c27ab02ef895$export$fd42f52fd3ae1109(rootComponentName, defaultContext) {
@@ -2004,6 +2036,22 @@ body[data-time-format="24"] span[data-time-format="24"] {
     createScope1.scopeName = baseScope.scopeName;
     return createScope1;
   }
+  const $9f79659886946c16$export$e5c5a5f917a5871c = Boolean(globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) ? y$5 : () => {
+  };
+  const $1746a345f3d73bb7$var$useReactId = e$2["useId".toString()] || (() => void 0);
+  let $1746a345f3d73bb7$var$count = 0;
+  function $1746a345f3d73bb7$export$f680877a34711e37(deterministicId) {
+    const [id, setId] = h$4($1746a345f3d73bb7$var$useReactId());
+    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
+      if (!deterministicId)
+        setId(
+          (reactId) => reactId !== null && reactId !== void 0 ? reactId : String($1746a345f3d73bb7$var$count++)
+        );
+    }, [
+      deterministicId
+    ]);
+    return deterministicId || (id ? `radix-${id}` : "");
+  }
   function $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(callback) {
     const callbackRef = _$1(callback);
     p$6(() => {
@@ -2062,20 +2110,1660 @@ body[data-time-format="24"] span[data-time-format="24"] {
     ]);
     return uncontrolledState;
   }
-  function $6ed0406888f73fc4$var$setRef(ref, value) {
-    if (typeof ref === "function")
-      ref(value);
-    else if (ref !== null && ref !== void 0)
-      ref.current = value;
+  const $5e63c961fc1ce211$export$8c6ed5c666ac1360 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { children, ...slotProps } = props;
+    const childrenArray = O$1.toArray(children);
+    const slottable = childrenArray.find($5e63c961fc1ce211$var$isSlottable);
+    if (slottable) {
+      const newElement = slottable.props.children;
+      const newChildren = childrenArray.map((child) => {
+        if (child === slottable) {
+          if (O$1.count(newElement) > 1)
+            return O$1.only(null);
+          return /* @__PURE__ */ an(newElement) ? newElement.props.children : null;
+        } else
+          return child;
+      });
+      return /* @__PURE__ */ y$6($5e63c961fc1ce211$var$SlotClone, _extends({}, slotProps, {
+        ref: forwardedRef
+      }), /* @__PURE__ */ an(newElement) ? /* @__PURE__ */ hn(newElement, void 0, newChildren) : null);
+    }
+    return /* @__PURE__ */ y$6($5e63c961fc1ce211$var$SlotClone, _extends({}, slotProps, {
+      ref: forwardedRef
+    }), children);
+  });
+  $5e63c961fc1ce211$export$8c6ed5c666ac1360.displayName = "Slot";
+  const $5e63c961fc1ce211$var$SlotClone = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { children, ...slotProps } = props;
+    if (/* @__PURE__ */ an(children))
+      return /* @__PURE__ */ hn(children, {
+        ...$5e63c961fc1ce211$var$mergeProps(slotProps, children.props),
+        ref: $6ed0406888f73fc4$export$43e446d32b3d21af(forwardedRef, children.ref)
+      });
+    return O$1.count(children) > 1 ? O$1.only(null) : null;
+  });
+  $5e63c961fc1ce211$var$SlotClone.displayName = "SlotClone";
+  const $5e63c961fc1ce211$export$d9f1ccf0bdb05d45 = ({ children }) => {
+    return /* @__PURE__ */ y$6(k$3, null, children);
+  };
+  function $5e63c961fc1ce211$var$isSlottable(child) {
+    return /* @__PURE__ */ an(child) && child.type === $5e63c961fc1ce211$export$d9f1ccf0bdb05d45;
   }
-  function $6ed0406888f73fc4$export$43e446d32b3d21af(...refs) {
-    return (node2) => refs.forEach(
-      (ref) => $6ed0406888f73fc4$var$setRef(ref, node2)
+  function $5e63c961fc1ce211$var$mergeProps(slotProps, childProps) {
+    const overrideProps = {
+      ...childProps
+    };
+    for (const propName in childProps) {
+      const slotPropValue = slotProps[propName];
+      const childPropValue = childProps[propName];
+      const isHandler = /^on[A-Z]/.test(propName);
+      if (isHandler) {
+        if (slotPropValue && childPropValue)
+          overrideProps[propName] = (...args) => {
+            childPropValue(...args);
+            slotPropValue(...args);
+          };
+        else if (slotPropValue)
+          overrideProps[propName] = slotPropValue;
+      } else if (propName === "style")
+        overrideProps[propName] = {
+          ...slotPropValue,
+          ...childPropValue
+        };
+      else if (propName === "className")
+        overrideProps[propName] = [
+          slotPropValue,
+          childPropValue
+        ].filter(Boolean).join(" ");
+    }
+    return {
+      ...slotProps,
+      ...overrideProps
+    };
+  }
+  const $8927f6f2acc4f386$var$NODES = [
+    "a",
+    "button",
+    "div",
+    "form",
+    "h2",
+    "h3",
+    "img",
+    "input",
+    "label",
+    "li",
+    "nav",
+    "ol",
+    "p",
+    "span",
+    "svg",
+    "ul"
+  ];
+  const $8927f6f2acc4f386$export$250ffa63cdc0d034 = $8927f6f2acc4f386$var$NODES.reduce((primitive, node2) => {
+    const Node = /* @__PURE__ */ k$1((props, forwardedRef) => {
+      const { asChild, ...primitiveProps } = props;
+      const Comp = asChild ? $5e63c961fc1ce211$export$8c6ed5c666ac1360 : node2;
+      p$6(() => {
+        window[Symbol.for("radix-ui")] = true;
+      }, []);
+      return /* @__PURE__ */ y$6(Comp, _extends({}, primitiveProps, {
+        ref: forwardedRef
+      }));
+    });
+    Node.displayName = `Primitive.${node2}`;
+    return {
+      ...primitive,
+      [node2]: Node
+    };
+  }, {});
+  function $8927f6f2acc4f386$export$6d1a0317bde7de7f(target, event) {
+    if (target)
+      mn(
+        () => target.dispatchEvent(event)
+      );
+  }
+  function $addc16e1bbe58fd0$export$3a72a57244d6e765(onEscapeKeyDownProp, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
+    const onEscapeKeyDown = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onEscapeKeyDownProp);
+    p$6(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Escape")
+          onEscapeKeyDown(event);
+      };
+      ownerDocument.addEventListener("keydown", handleKeyDown);
+      return () => ownerDocument.removeEventListener("keydown", handleKeyDown);
+    }, [
+      onEscapeKeyDown,
+      ownerDocument
+    ]);
+  }
+  const $5cb92bef7577960e$var$CONTEXT_UPDATE = "dismissableLayer.update";
+  const $5cb92bef7577960e$var$POINTER_DOWN_OUTSIDE = "dismissableLayer.pointerDownOutside";
+  const $5cb92bef7577960e$var$FOCUS_OUTSIDE = "dismissableLayer.focusOutside";
+  let $5cb92bef7577960e$var$originalBodyPointerEvents;
+  const $5cb92bef7577960e$var$DismissableLayerContext = /* @__PURE__ */ G$1({
+    layers: /* @__PURE__ */ new Set(),
+    layersWithOutsidePointerEventsDisabled: /* @__PURE__ */ new Set(),
+    branches: /* @__PURE__ */ new Set()
+  });
+  const $5cb92bef7577960e$export$177fb62ff3ec1f22 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    var _node$ownerDocument;
+    const { disableOutsidePointerEvents = false, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, onDismiss, ...layerProps } = props;
+    const context = q$1($5cb92bef7577960e$var$DismissableLayerContext);
+    const [node1, setNode] = h$4(null);
+    const ownerDocument = (_node$ownerDocument = node1 === null || node1 === void 0 ? void 0 : node1.ownerDocument) !== null && _node$ownerDocument !== void 0 ? _node$ownerDocument : globalThis === null || globalThis === void 0 ? void 0 : globalThis.document;
+    const [, force] = h$4({});
+    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(
+      forwardedRef,
+      (node2) => setNode(node2)
+    );
+    const layers = Array.from(context.layers);
+    const [highestLayerWithOutsidePointerEventsDisabled] = [
+      ...context.layersWithOutsidePointerEventsDisabled
+    ].slice(-1);
+    const highestLayerWithOutsidePointerEventsDisabledIndex = layers.indexOf(highestLayerWithOutsidePointerEventsDisabled);
+    const index2 = node1 ? layers.indexOf(node1) : -1;
+    const isBodyPointerEventsDisabled = context.layersWithOutsidePointerEventsDisabled.size > 0;
+    const isPointerEventsEnabled = index2 >= highestLayerWithOutsidePointerEventsDisabledIndex;
+    const pointerDownOutside = $5cb92bef7577960e$var$usePointerDownOutside((event) => {
+      const target = event.target;
+      const isPointerDownOnBranch = [
+        ...context.branches
+      ].some(
+        (branch) => branch.contains(target)
+      );
+      if (!isPointerEventsEnabled || isPointerDownOnBranch)
+        return;
+      onPointerDownOutside === null || onPointerDownOutside === void 0 || onPointerDownOutside(event);
+      onInteractOutside === null || onInteractOutside === void 0 || onInteractOutside(event);
+      if (!event.defaultPrevented)
+        onDismiss === null || onDismiss === void 0 || onDismiss();
+    }, ownerDocument);
+    const focusOutside = $5cb92bef7577960e$var$useFocusOutside((event) => {
+      const target = event.target;
+      const isFocusInBranch = [
+        ...context.branches
+      ].some(
+        (branch) => branch.contains(target)
+      );
+      if (isFocusInBranch)
+        return;
+      onFocusOutside === null || onFocusOutside === void 0 || onFocusOutside(event);
+      onInteractOutside === null || onInteractOutside === void 0 || onInteractOutside(event);
+      if (!event.defaultPrevented)
+        onDismiss === null || onDismiss === void 0 || onDismiss();
+    }, ownerDocument);
+    $addc16e1bbe58fd0$export$3a72a57244d6e765((event) => {
+      const isHighestLayer = index2 === context.layers.size - 1;
+      if (!isHighestLayer)
+        return;
+      onEscapeKeyDown === null || onEscapeKeyDown === void 0 || onEscapeKeyDown(event);
+      if (!event.defaultPrevented && onDismiss) {
+        event.preventDefault();
+        onDismiss();
+      }
+    }, ownerDocument);
+    p$6(() => {
+      if (!node1)
+        return;
+      if (disableOutsidePointerEvents) {
+        if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
+          $5cb92bef7577960e$var$originalBodyPointerEvents = ownerDocument.body.style.pointerEvents;
+          ownerDocument.body.style.pointerEvents = "none";
+        }
+        context.layersWithOutsidePointerEventsDisabled.add(node1);
+      }
+      context.layers.add(node1);
+      $5cb92bef7577960e$var$dispatchUpdate();
+      return () => {
+        if (disableOutsidePointerEvents && context.layersWithOutsidePointerEventsDisabled.size === 1)
+          ownerDocument.body.style.pointerEvents = $5cb92bef7577960e$var$originalBodyPointerEvents;
+      };
+    }, [
+      node1,
+      ownerDocument,
+      disableOutsidePointerEvents,
+      context
+    ]);
+    p$6(() => {
+      return () => {
+        if (!node1)
+          return;
+        context.layers.delete(node1);
+        context.layersWithOutsidePointerEventsDisabled.delete(node1);
+        $5cb92bef7577960e$var$dispatchUpdate();
+      };
+    }, [
+      node1,
+      context
+    ]);
+    p$6(() => {
+      const handleUpdate = () => force({});
+      document.addEventListener($5cb92bef7577960e$var$CONTEXT_UPDATE, handleUpdate);
+      return () => document.removeEventListener($5cb92bef7577960e$var$CONTEXT_UPDATE, handleUpdate);
+    }, []);
+    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({}, layerProps, {
+      ref: composedRefs,
+      style: {
+        pointerEvents: isBodyPointerEventsDisabled ? isPointerEventsEnabled ? "auto" : "none" : void 0,
+        ...props.style
+      },
+      onFocusCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onFocusCapture, focusOutside.onFocusCapture),
+      onBlurCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onBlurCapture, focusOutside.onBlurCapture),
+      onPointerDownCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onPointerDownCapture, pointerDownOutside.onPointerDownCapture)
+    }));
+  });
+  function $5cb92bef7577960e$var$usePointerDownOutside(onPointerDownOutside, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
+    const handlePointerDownOutside = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onPointerDownOutside);
+    const isPointerInsideReactTreeRef = _$1(false);
+    const handleClickRef = _$1(() => {
+    });
+    p$6(() => {
+      const handlePointerDown = (event) => {
+        if (event.target && !isPointerInsideReactTreeRef.current) {
+          let handleAndDispatchPointerDownOutsideEvent = function() {
+            $5cb92bef7577960e$var$handleAndDispatchCustomEvent($5cb92bef7577960e$var$POINTER_DOWN_OUTSIDE, handlePointerDownOutside, eventDetail, {
+              discrete: true
+            });
+          };
+          const eventDetail = {
+            originalEvent: event
+          };
+          if (event.pointerType === "touch") {
+            ownerDocument.removeEventListener("click", handleClickRef.current);
+            handleClickRef.current = handleAndDispatchPointerDownOutsideEvent;
+            ownerDocument.addEventListener("click", handleClickRef.current, {
+              once: true
+            });
+          } else
+            handleAndDispatchPointerDownOutsideEvent();
+        }
+        isPointerInsideReactTreeRef.current = false;
+      };
+      const timerId = window.setTimeout(() => {
+        ownerDocument.addEventListener("pointerdown", handlePointerDown);
+      }, 0);
+      return () => {
+        window.clearTimeout(timerId);
+        ownerDocument.removeEventListener("pointerdown", handlePointerDown);
+        ownerDocument.removeEventListener("click", handleClickRef.current);
+      };
+    }, [
+      ownerDocument,
+      handlePointerDownOutside
+    ]);
+    return {
+      // ensures we check React component tree (not just DOM tree)
+      onPointerDownCapture: () => isPointerInsideReactTreeRef.current = true
+    };
+  }
+  function $5cb92bef7577960e$var$useFocusOutside(onFocusOutside, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
+    const handleFocusOutside = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onFocusOutside);
+    const isFocusInsideReactTreeRef = _$1(false);
+    p$6(() => {
+      const handleFocus = (event) => {
+        if (event.target && !isFocusInsideReactTreeRef.current) {
+          const eventDetail = {
+            originalEvent: event
+          };
+          $5cb92bef7577960e$var$handleAndDispatchCustomEvent($5cb92bef7577960e$var$FOCUS_OUTSIDE, handleFocusOutside, eventDetail, {
+            discrete: false
+          });
+        }
+      };
+      ownerDocument.addEventListener("focusin", handleFocus);
+      return () => ownerDocument.removeEventListener("focusin", handleFocus);
+    }, [
+      ownerDocument,
+      handleFocusOutside
+    ]);
+    return {
+      onFocusCapture: () => isFocusInsideReactTreeRef.current = true,
+      onBlurCapture: () => isFocusInsideReactTreeRef.current = false
+    };
+  }
+  function $5cb92bef7577960e$var$dispatchUpdate() {
+    const event = new CustomEvent($5cb92bef7577960e$var$CONTEXT_UPDATE);
+    document.dispatchEvent(event);
+  }
+  function $5cb92bef7577960e$var$handleAndDispatchCustomEvent(name, handler, detail, { discrete }) {
+    const target = detail.originalEvent.target;
+    const event = new CustomEvent(name, {
+      bubbles: false,
+      cancelable: true,
+      detail
+    });
+    if (handler)
+      target.addEventListener(name, handler, {
+        once: true
+      });
+    if (discrete)
+      $8927f6f2acc4f386$export$6d1a0317bde7de7f(target, event);
+    else
+      target.dispatchEvent(event);
+  }
+  const $d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
+  const $d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
+  const $d3863c46a17e8a28$var$EVENT_OPTIONS = {
+    bubbles: false,
+    cancelable: true
+  };
+  const $d3863c46a17e8a28$export$20e40289641fbbb6 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { loop = false, trapped = false, onMountAutoFocus: onMountAutoFocusProp, onUnmountAutoFocus: onUnmountAutoFocusProp, ...scopeProps } = props;
+    const [container1, setContainer] = h$4(null);
+    const onMountAutoFocus = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onMountAutoFocusProp);
+    const onUnmountAutoFocus = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onUnmountAutoFocusProp);
+    const lastFocusedElementRef = _$1(null);
+    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(
+      forwardedRef,
+      (node2) => setContainer(node2)
+    );
+    const focusScope = _$1({
+      paused: false,
+      pause() {
+        this.paused = true;
+      },
+      resume() {
+        this.paused = false;
+      }
+    }).current;
+    p$6(() => {
+      if (trapped) {
+        let handleFocusIn = function(event) {
+          if (focusScope.paused || !container1)
+            return;
+          const target = event.target;
+          if (container1.contains(target))
+            lastFocusedElementRef.current = target;
+          else
+            $d3863c46a17e8a28$var$focus(lastFocusedElementRef.current, {
+              select: true
+            });
+        }, handleFocusOut = function(event) {
+          if (focusScope.paused || !container1)
+            return;
+          if (!container1.contains(event.relatedTarget))
+            $d3863c46a17e8a28$var$focus(lastFocusedElementRef.current, {
+              select: true
+            });
+        };
+        document.addEventListener("focusin", handleFocusIn);
+        document.addEventListener("focusout", handleFocusOut);
+        return () => {
+          document.removeEventListener("focusin", handleFocusIn);
+          document.removeEventListener("focusout", handleFocusOut);
+        };
+      }
+    }, [
+      trapped,
+      container1,
+      focusScope.paused
+    ]);
+    p$6(() => {
+      if (container1) {
+        $d3863c46a17e8a28$var$focusScopesStack.add(focusScope);
+        const previouslyFocusedElement = document.activeElement;
+        const hasFocusedCandidate = container1.contains(previouslyFocusedElement);
+        if (!hasFocusedCandidate) {
+          const mountEvent = new CustomEvent($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, $d3863c46a17e8a28$var$EVENT_OPTIONS);
+          container1.addEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
+          container1.dispatchEvent(mountEvent);
+          if (!mountEvent.defaultPrevented) {
+            $d3863c46a17e8a28$var$focusFirst($d3863c46a17e8a28$var$removeLinks($d3863c46a17e8a28$var$getTabbableCandidates(container1)), {
+              select: true
+            });
+            if (document.activeElement === previouslyFocusedElement)
+              $d3863c46a17e8a28$var$focus(container1);
+          }
+        }
+        return () => {
+          container1.removeEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
+          setTimeout(() => {
+            const unmountEvent = new CustomEvent($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, $d3863c46a17e8a28$var$EVENT_OPTIONS);
+            container1.addEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
+            container1.dispatchEvent(unmountEvent);
+            if (!unmountEvent.defaultPrevented)
+              $d3863c46a17e8a28$var$focus(previouslyFocusedElement !== null && previouslyFocusedElement !== void 0 ? previouslyFocusedElement : document.body, {
+                select: true
+              });
+            container1.removeEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
+            $d3863c46a17e8a28$var$focusScopesStack.remove(focusScope);
+          }, 0);
+        };
+      }
+    }, [
+      container1,
+      onMountAutoFocus,
+      onUnmountAutoFocus,
+      focusScope
+    ]);
+    const handleKeyDown = T$4((event) => {
+      if (!loop && !trapped)
+        return;
+      if (focusScope.paused)
+        return;
+      const isTabKey = event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey;
+      const focusedElement = document.activeElement;
+      if (isTabKey && focusedElement) {
+        const container = event.currentTarget;
+        const [first, last] = $d3863c46a17e8a28$var$getTabbableEdges(container);
+        const hasTabbableElementsInside = first && last;
+        if (!hasTabbableElementsInside) {
+          if (focusedElement === container)
+            event.preventDefault();
+        } else {
+          if (!event.shiftKey && focusedElement === last) {
+            event.preventDefault();
+            if (loop)
+              $d3863c46a17e8a28$var$focus(first, {
+                select: true
+              });
+          } else if (event.shiftKey && focusedElement === first) {
+            event.preventDefault();
+            if (loop)
+              $d3863c46a17e8a28$var$focus(last, {
+                select: true
+              });
+          }
+        }
+      }
+    }, [
+      loop,
+      trapped,
+      focusScope.paused
+    ]);
+    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({
+      tabIndex: -1
+    }, scopeProps, {
+      ref: composedRefs,
+      onKeyDown: handleKeyDown
+    }));
+  });
+  function $d3863c46a17e8a28$var$focusFirst(candidates, { select = false } = {}) {
+    const previouslyFocusedElement = document.activeElement;
+    for (const candidate of candidates) {
+      $d3863c46a17e8a28$var$focus(candidate, {
+        select
+      });
+      if (document.activeElement !== previouslyFocusedElement)
+        return;
+    }
+  }
+  function $d3863c46a17e8a28$var$getTabbableEdges(container) {
+    const candidates = $d3863c46a17e8a28$var$getTabbableCandidates(container);
+    const first = $d3863c46a17e8a28$var$findVisible(candidates, container);
+    const last = $d3863c46a17e8a28$var$findVisible(candidates.reverse(), container);
+    return [
+      first,
+      last
+    ];
+  }
+  function $d3863c46a17e8a28$var$getTabbableCandidates(container) {
+    const nodes = [];
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+      acceptNode: (node2) => {
+        const isHiddenInput = node2.tagName === "INPUT" && node2.type === "hidden";
+        if (node2.disabled || node2.hidden || isHiddenInput)
+          return NodeFilter.FILTER_SKIP;
+        return node2.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    while (walker.nextNode())
+      nodes.push(walker.currentNode);
+    return nodes;
+  }
+  function $d3863c46a17e8a28$var$findVisible(elements, container) {
+    for (const element2 of elements) {
+      if (!$d3863c46a17e8a28$var$isHidden(element2, {
+        upTo: container
+      }))
+        return element2;
+    }
+  }
+  function $d3863c46a17e8a28$var$isHidden(node2, { upTo }) {
+    if (getComputedStyle(node2).visibility === "hidden")
+      return true;
+    while (node2) {
+      if (upTo !== void 0 && node2 === upTo)
+        return false;
+      if (getComputedStyle(node2).display === "none")
+        return true;
+      node2 = node2.parentElement;
+    }
+    return false;
+  }
+  function $d3863c46a17e8a28$var$isSelectableInput(element2) {
+    return element2 instanceof HTMLInputElement && "select" in element2;
+  }
+  function $d3863c46a17e8a28$var$focus(element2, { select = false } = {}) {
+    if (element2 && element2.focus) {
+      const previouslyFocusedElement = document.activeElement;
+      element2.focus({
+        preventScroll: true
+      });
+      if (element2 !== previouslyFocusedElement && $d3863c46a17e8a28$var$isSelectableInput(element2) && select)
+        element2.select();
+    }
+  }
+  const $d3863c46a17e8a28$var$focusScopesStack = $d3863c46a17e8a28$var$createFocusScopesStack();
+  function $d3863c46a17e8a28$var$createFocusScopesStack() {
+    let stack = [];
+    return {
+      add(focusScope) {
+        const activeFocusScope = stack[0];
+        if (focusScope !== activeFocusScope)
+          activeFocusScope === null || activeFocusScope === void 0 || activeFocusScope.pause();
+        stack = $d3863c46a17e8a28$var$arrayRemove(stack, focusScope);
+        stack.unshift(focusScope);
+      },
+      remove(focusScope) {
+        var _stack$;
+        stack = $d3863c46a17e8a28$var$arrayRemove(stack, focusScope);
+        (_stack$ = stack[0]) === null || _stack$ === void 0 || _stack$.resume();
+      }
+    };
+  }
+  function $d3863c46a17e8a28$var$arrayRemove(array, item) {
+    const updatedArray = [
+      ...array
+    ];
+    const index2 = updatedArray.indexOf(item);
+    if (index2 !== -1)
+      updatedArray.splice(index2, 1);
+    return updatedArray;
+  }
+  function $d3863c46a17e8a28$var$removeLinks(items) {
+    return items.filter(
+      (item) => item.tagName !== "A"
     );
   }
-  function $6ed0406888f73fc4$export$c7b2cbe3552a0d05(...refs) {
-    return T$4($6ed0406888f73fc4$export$43e446d32b3d21af(...refs), refs);
+  const $f1701beae083dbae$export$602eac185826482c = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    var _globalThis$document;
+    const { container = globalThis === null || globalThis === void 0 ? void 0 : (_globalThis$document = globalThis.document) === null || _globalThis$document === void 0 ? void 0 : _globalThis$document.body, ...portalProps } = props;
+    return container ? /* @__PURE__ */ wn.createPortal(/* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({}, portalProps, {
+      ref: forwardedRef
+    })), container) : null;
+  });
+  function $fe963b355347cc68$export$3e6543de14f8614f(initialState, machine) {
+    return s$6((state, event) => {
+      const nextState = machine[state][event];
+      return nextState !== null && nextState !== void 0 ? nextState : state;
+    }, initialState);
   }
+  const $921a889cee6df7e8$export$99c2b779aa4e8b8b = (props) => {
+    const { present, children } = props;
+    const presence = $921a889cee6df7e8$var$usePresence(present);
+    const child = typeof children === "function" ? children({
+      present: presence.isPresent
+    }) : O$1.only(children);
+    const ref = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(presence.ref, child.ref);
+    const forceMount = typeof children === "function";
+    return forceMount || presence.isPresent ? /* @__PURE__ */ hn(child, {
+      ref
+    }) : null;
+  };
+  $921a889cee6df7e8$export$99c2b779aa4e8b8b.displayName = "Presence";
+  function $921a889cee6df7e8$var$usePresence(present) {
+    const [node1, setNode] = h$4();
+    const stylesRef = _$1({});
+    const prevPresentRef = _$1(present);
+    const prevAnimationNameRef = _$1("none");
+    const initialState = present ? "mounted" : "unmounted";
+    const [state, send] = $fe963b355347cc68$export$3e6543de14f8614f(initialState, {
+      mounted: {
+        UNMOUNT: "unmounted",
+        ANIMATION_OUT: "unmountSuspended"
+      },
+      unmountSuspended: {
+        MOUNT: "mounted",
+        ANIMATION_END: "unmounted"
+      },
+      unmounted: {
+        MOUNT: "mounted"
+      }
+    });
+    p$6(() => {
+      const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
+      prevAnimationNameRef.current = state === "mounted" ? currentAnimationName : "none";
+    }, [
+      state
+    ]);
+    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
+      const styles = stylesRef.current;
+      const wasPresent = prevPresentRef.current;
+      const hasPresentChanged = wasPresent !== present;
+      if (hasPresentChanged) {
+        const prevAnimationName = prevAnimationNameRef.current;
+        const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(styles);
+        if (present)
+          send("MOUNT");
+        else if (currentAnimationName === "none" || (styles === null || styles === void 0 ? void 0 : styles.display) === "none")
+          send("UNMOUNT");
+        else {
+          const isAnimating = prevAnimationName !== currentAnimationName;
+          if (wasPresent && isAnimating)
+            send("ANIMATION_OUT");
+          else
+            send("UNMOUNT");
+        }
+        prevPresentRef.current = present;
+      }
+    }, [
+      present,
+      send
+    ]);
+    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
+      if (node1) {
+        const handleAnimationEnd = (event) => {
+          const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
+          const isCurrentAnimation = currentAnimationName.includes(event.animationName);
+          if (event.target === node1 && isCurrentAnimation)
+            mn(
+              () => send("ANIMATION_END")
+            );
+        };
+        const handleAnimationStart = (event) => {
+          if (event.target === node1)
+            prevAnimationNameRef.current = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
+        };
+        node1.addEventListener("animationstart", handleAnimationStart);
+        node1.addEventListener("animationcancel", handleAnimationEnd);
+        node1.addEventListener("animationend", handleAnimationEnd);
+        return () => {
+          node1.removeEventListener("animationstart", handleAnimationStart);
+          node1.removeEventListener("animationcancel", handleAnimationEnd);
+          node1.removeEventListener("animationend", handleAnimationEnd);
+        };
+      } else
+        send("ANIMATION_END");
+    }, [
+      node1,
+      send
+    ]);
+    return {
+      isPresent: [
+        "mounted",
+        "unmountSuspended"
+      ].includes(state),
+      ref: T$4((node2) => {
+        if (node2)
+          stylesRef.current = getComputedStyle(node2);
+        setNode(node2);
+      }, [])
+    };
+  }
+  function $921a889cee6df7e8$var$getAnimationName(styles) {
+    return (styles === null || styles === void 0 ? void 0 : styles.animationName) || "none";
+  }
+  let $3db38b7d1fb3fe6a$var$count = 0;
+  function $3db38b7d1fb3fe6a$export$b7ece24a22aeda8c() {
+    p$6(() => {
+      var _edgeGuards$, _edgeGuards$2;
+      const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
+      document.body.insertAdjacentElement("afterbegin", (_edgeGuards$ = edgeGuards[0]) !== null && _edgeGuards$ !== void 0 ? _edgeGuards$ : $3db38b7d1fb3fe6a$var$createFocusGuard());
+      document.body.insertAdjacentElement("beforeend", (_edgeGuards$2 = edgeGuards[1]) !== null && _edgeGuards$2 !== void 0 ? _edgeGuards$2 : $3db38b7d1fb3fe6a$var$createFocusGuard());
+      $3db38b7d1fb3fe6a$var$count++;
+      return () => {
+        if ($3db38b7d1fb3fe6a$var$count === 1)
+          document.querySelectorAll("[data-radix-focus-guard]").forEach(
+            (node2) => node2.remove()
+          );
+        $3db38b7d1fb3fe6a$var$count--;
+      };
+    }, []);
+  }
+  function $3db38b7d1fb3fe6a$var$createFocusGuard() {
+    const element2 = document.createElement("span");
+    element2.setAttribute("data-radix-focus-guard", "");
+    element2.tabIndex = 0;
+    element2.style.cssText = "outline: none; opacity: 0; position: fixed; pointer-events: none";
+    return element2;
+  }
+  var __assign = function() {
+    __assign = Object.assign || function __assign2(t2) {
+      for (var s2, i2 = 1, n2 = arguments.length; i2 < n2; i2++) {
+        s2 = arguments[i2];
+        for (var p2 in s2)
+          if (Object.prototype.hasOwnProperty.call(s2, p2))
+            t2[p2] = s2[p2];
+      }
+      return t2;
+    };
+    return __assign.apply(this, arguments);
+  };
+  function __rest(s2, e2) {
+    var t2 = {};
+    for (var p2 in s2)
+      if (Object.prototype.hasOwnProperty.call(s2, p2) && e2.indexOf(p2) < 0)
+        t2[p2] = s2[p2];
+    if (s2 != null && typeof Object.getOwnPropertySymbols === "function")
+      for (var i2 = 0, p2 = Object.getOwnPropertySymbols(s2); i2 < p2.length; i2++) {
+        if (e2.indexOf(p2[i2]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i2]))
+          t2[p2[i2]] = s2[p2[i2]];
+      }
+    return t2;
+  }
+  function __spreadArray(to, from, pack) {
+    if (pack || arguments.length === 2)
+      for (var i2 = 0, l2 = from.length, ar; i2 < l2; i2++) {
+        if (ar || !(i2 in from)) {
+          if (!ar)
+            ar = Array.prototype.slice.call(from, 0, i2);
+          ar[i2] = from[i2];
+        }
+      }
+    return to.concat(ar || Array.prototype.slice.call(from));
+  }
+  var zeroRightClassName = "right-scroll-bar-position";
+  var fullWidthClassName = "width-before-scroll-bar";
+  var noScrollbarsClassName = "with-scroll-bars-hidden";
+  var removedBarSizeVariable = "--removed-body-scroll-bar-size";
+  function assignRef(ref, value) {
+    if (typeof ref === "function") {
+      ref(value);
+    } else if (ref) {
+      ref.current = value;
+    }
+    return ref;
+  }
+  function useCallbackRef(initialValue, callback) {
+    var ref = h$4(function() {
+      return {
+        // value
+        value: initialValue,
+        // last callback
+        callback,
+        // "memoized" public interface
+        facade: {
+          get current() {
+            return ref.value;
+          },
+          set current(value) {
+            var last = ref.value;
+            if (last !== value) {
+              ref.value = value;
+              ref.callback(value, last);
+            }
+          }
+        }
+      };
+    })[0];
+    ref.callback = callback;
+    return ref.facade;
+  }
+  function useMergeRefs(refs, defaultValue) {
+    return useCallbackRef(defaultValue || null, function(newValue) {
+      return refs.forEach(function(ref) {
+        return assignRef(ref, newValue);
+      });
+    });
+  }
+  function ItoI(a2) {
+    return a2;
+  }
+  function innerCreateMedium(defaults, middleware) {
+    if (middleware === void 0) {
+      middleware = ItoI;
+    }
+    var buffer = [];
+    var assigned = false;
+    var medium = {
+      read: function() {
+        if (assigned) {
+          throw new Error("Sidecar: could not `read` from an `assigned` medium. `read` could be used only with `useMedium`.");
+        }
+        if (buffer.length) {
+          return buffer[buffer.length - 1];
+        }
+        return defaults;
+      },
+      useMedium: function(data) {
+        var item = middleware(data, assigned);
+        buffer.push(item);
+        return function() {
+          buffer = buffer.filter(function(x2) {
+            return x2 !== item;
+          });
+        };
+      },
+      assignSyncMedium: function(cb) {
+        assigned = true;
+        while (buffer.length) {
+          var cbs = buffer;
+          buffer = [];
+          cbs.forEach(cb);
+        }
+        buffer = {
+          push: function(x2) {
+            return cb(x2);
+          },
+          filter: function() {
+            return buffer;
+          }
+        };
+      },
+      assignMedium: function(cb) {
+        assigned = true;
+        var pendingQueue = [];
+        if (buffer.length) {
+          var cbs = buffer;
+          buffer = [];
+          cbs.forEach(cb);
+          pendingQueue = buffer;
+        }
+        var executeQueue = function() {
+          var cbs2 = pendingQueue;
+          pendingQueue = [];
+          cbs2.forEach(cb);
+        };
+        var cycle = function() {
+          return Promise.resolve().then(executeQueue);
+        };
+        cycle();
+        buffer = {
+          push: function(x2) {
+            pendingQueue.push(x2);
+            cycle();
+          },
+          filter: function(filter) {
+            pendingQueue = pendingQueue.filter(filter);
+            return buffer;
+          }
+        };
+      }
+    };
+    return medium;
+  }
+  function createSidecarMedium(options) {
+    if (options === void 0) {
+      options = {};
+    }
+    var medium = innerCreateMedium(null);
+    medium.options = __assign({ async: true, ssr: false }, options);
+    return medium;
+  }
+  var SideCar$1 = function(_a) {
+    var sideCar = _a.sideCar, rest = __rest(_a, ["sideCar"]);
+    if (!sideCar) {
+      throw new Error("Sidecar: please provide `sideCar` property to import the right car");
+    }
+    var Target = sideCar.read();
+    if (!Target) {
+      throw new Error("Sidecar medium not found");
+    }
+    return y$6(Target, __assign({}, rest));
+  };
+  SideCar$1.isSideCarExport = true;
+  function exportSidecar(medium, exported) {
+    medium.useMedium(exported);
+    return SideCar$1;
+  }
+  var effectCar = createSidecarMedium();
+  var nothing = function() {
+    return;
+  };
+  var RemoveScroll = k$1(function(props, parentRef) {
+    var ref = _$1(null);
+    var _a = h$4({
+      onScrollCapture: nothing,
+      onWheelCapture: nothing,
+      onTouchMoveCapture: nothing
+    }), callbacks = _a[0], setCallbacks = _a[1];
+    var forwardProps = props.forwardProps, children = props.children, className = props.className, removeScrollBar = props.removeScrollBar, enabled = props.enabled, shards = props.shards, sideCar = props.sideCar, noIsolation = props.noIsolation, inert = props.inert, allowPinchZoom = props.allowPinchZoom, _b = props.as, Container = _b === void 0 ? "div" : _b, rest = __rest(props, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noIsolation", "inert", "allowPinchZoom", "as"]);
+    var SideCar2 = sideCar;
+    var containerRef = useMergeRefs([ref, parentRef]);
+    var containerProps = __assign(__assign({}, rest), callbacks);
+    return y$6(
+      k$3,
+      null,
+      enabled && y$6(SideCar2, { sideCar: effectCar, removeScrollBar, shards, noIsolation, inert, setCallbacks, allowPinchZoom: !!allowPinchZoom, lockRef: ref }),
+      forwardProps ? hn(O$1.only(children), __assign(__assign({}, containerProps), { ref: containerRef })) : y$6(Container, __assign({}, containerProps, { className, ref: containerRef }), children)
+    );
+  });
+  RemoveScroll.defaultProps = {
+    enabled: true,
+    removeScrollBar: true,
+    inert: false
+  };
+  RemoveScroll.classNames = {
+    fullWidth: fullWidthClassName,
+    zeroRight: zeroRightClassName
+  };
+  var getNonce = function() {
+    if (typeof __webpack_nonce__ !== "undefined") {
+      return __webpack_nonce__;
+    }
+    return void 0;
+  };
+  function makeStyleTag() {
+    if (!document)
+      return null;
+    var tag = document.createElement("style");
+    tag.type = "text/css";
+    var nonce = getNonce();
+    if (nonce) {
+      tag.setAttribute("nonce", nonce);
+    }
+    return tag;
+  }
+  function injectStyles(tag, css) {
+    if (tag.styleSheet) {
+      tag.styleSheet.cssText = css;
+    } else {
+      tag.appendChild(document.createTextNode(css));
+    }
+  }
+  function insertStyleTag(tag) {
+    var head2 = document.head || document.getElementsByTagName("head")[0];
+    head2.appendChild(tag);
+  }
+  var stylesheetSingleton = function() {
+    var counter = 0;
+    var stylesheet = null;
+    return {
+      add: function(style) {
+        if (counter == 0) {
+          if (stylesheet = makeStyleTag()) {
+            injectStyles(stylesheet, style);
+            insertStyleTag(stylesheet);
+          }
+        }
+        counter++;
+      },
+      remove: function() {
+        counter--;
+        if (!counter && stylesheet) {
+          stylesheet.parentNode && stylesheet.parentNode.removeChild(stylesheet);
+          stylesheet = null;
+        }
+      }
+    };
+  };
+  var styleHookSingleton = function() {
+    var sheet = stylesheetSingleton();
+    return function(styles, isDynamic) {
+      p$6(function() {
+        sheet.add(styles);
+        return function() {
+          sheet.remove();
+        };
+      }, [styles && isDynamic]);
+    };
+  };
+  var styleSingleton = function() {
+    var useStyle = styleHookSingleton();
+    var Sheet = function(_a) {
+      var styles = _a.styles, dynamic = _a.dynamic;
+      useStyle(styles, dynamic);
+      return null;
+    };
+    return Sheet;
+  };
+  var zeroGap = {
+    left: 0,
+    top: 0,
+    right: 0,
+    gap: 0
+  };
+  var parse$1 = function(x2) {
+    return parseInt(x2 || "", 10) || 0;
+  };
+  var getOffset = function(gapMode) {
+    var cs = window.getComputedStyle(document.body);
+    var left = cs[gapMode === "padding" ? "paddingLeft" : "marginLeft"];
+    var top = cs[gapMode === "padding" ? "paddingTop" : "marginTop"];
+    var right = cs[gapMode === "padding" ? "paddingRight" : "marginRight"];
+    return [parse$1(left), parse$1(top), parse$1(right)];
+  };
+  var getGapWidth = function(gapMode) {
+    if (gapMode === void 0) {
+      gapMode = "margin";
+    }
+    if (typeof window === "undefined") {
+      return zeroGap;
+    }
+    var offsets = getOffset(gapMode);
+    var documentWidth = document.documentElement.clientWidth;
+    var windowWidth = window.innerWidth;
+    return {
+      left: offsets[0],
+      top: offsets[1],
+      right: offsets[2],
+      gap: Math.max(0, windowWidth - documentWidth + offsets[2] - offsets[0])
+    };
+  };
+  var Style = styleSingleton();
+  var getStyles = function(_a, allowRelative, gapMode, important) {
+    var left = _a.left, top = _a.top, right = _a.right, gap = _a.gap;
+    if (gapMode === void 0) {
+      gapMode = "margin";
+    }
+    return "\n  .".concat(noScrollbarsClassName, " {\n   overflow: hidden ").concat(important, ";\n   padding-right: ").concat(gap, "px ").concat(important, ";\n  }\n  body {\n    overflow: hidden ").concat(important, ";\n    overscroll-behavior: contain;\n    ").concat([
+      allowRelative && "position: relative ".concat(important, ";"),
+      gapMode === "margin" && "\n    padding-left: ".concat(left, "px;\n    padding-top: ").concat(top, "px;\n    padding-right: ").concat(right, "px;\n    margin-left:0;\n    margin-top:0;\n    margin-right: ").concat(gap, "px ").concat(important, ";\n    "),
+      gapMode === "padding" && "padding-right: ".concat(gap, "px ").concat(important, ";")
+    ].filter(Boolean).join(""), "\n  }\n  \n  .").concat(zeroRightClassName, " {\n    right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " {\n    margin-right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(zeroRightClassName, " .").concat(zeroRightClassName, " {\n    right: 0 ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " .").concat(fullWidthClassName, " {\n    margin-right: 0 ").concat(important, ";\n  }\n  \n  body {\n    ").concat(removedBarSizeVariable, ": ").concat(gap, "px;\n  }\n");
+  };
+  var RemoveScrollBar = function(props) {
+    var noRelative = props.noRelative, noImportant = props.noImportant, _a = props.gapMode, gapMode = _a === void 0 ? "margin" : _a;
+    var gap = F$1(function() {
+      return getGapWidth(gapMode);
+    }, [gapMode]);
+    return y$6(Style, { styles: getStyles(gap, !noRelative, gapMode, !noImportant ? "!important" : "") });
+  };
+  var passiveSupported = false;
+  if (typeof window !== "undefined") {
+    try {
+      var options = Object.defineProperty({}, "passive", {
+        get: function() {
+          passiveSupported = true;
+          return true;
+        }
+      });
+      window.addEventListener("test", options, options);
+      window.removeEventListener("test", options, options);
+    } catch (err) {
+      passiveSupported = false;
+    }
+  }
+  var nonPassive = passiveSupported ? { passive: false } : false;
+  var alwaysContainsScroll = function(node2) {
+    return node2.tagName === "TEXTAREA";
+  };
+  var elementCanBeScrolled = function(node2, overflow) {
+    var styles = window.getComputedStyle(node2);
+    return (
+      // not-not-scrollable
+      styles[overflow] !== "hidden" && // contains scroll inside self
+      !(styles.overflowY === styles.overflowX && !alwaysContainsScroll(node2) && styles[overflow] === "visible")
+    );
+  };
+  var elementCouldBeVScrolled = function(node2) {
+    return elementCanBeScrolled(node2, "overflowY");
+  };
+  var elementCouldBeHScrolled = function(node2) {
+    return elementCanBeScrolled(node2, "overflowX");
+  };
+  var locationCouldBeScrolled = function(axis, node2) {
+    var current = node2;
+    do {
+      if (typeof ShadowRoot !== "undefined" && current instanceof ShadowRoot) {
+        current = current.host;
+      }
+      var isScrollable = elementCouldBeScrolled(axis, current);
+      if (isScrollable) {
+        var _a = getScrollVariables(axis, current), s2 = _a[1], d2 = _a[2];
+        if (s2 > d2) {
+          return true;
+        }
+      }
+      current = current.parentNode;
+    } while (current && current !== document.body);
+    return false;
+  };
+  var getVScrollVariables = function(_a) {
+    var scrollTop = _a.scrollTop, scrollHeight = _a.scrollHeight, clientHeight = _a.clientHeight;
+    return [
+      scrollTop,
+      scrollHeight,
+      clientHeight
+    ];
+  };
+  var getHScrollVariables = function(_a) {
+    var scrollLeft = _a.scrollLeft, scrollWidth = _a.scrollWidth, clientWidth = _a.clientWidth;
+    return [
+      scrollLeft,
+      scrollWidth,
+      clientWidth
+    ];
+  };
+  var elementCouldBeScrolled = function(axis, node2) {
+    return axis === "v" ? elementCouldBeVScrolled(node2) : elementCouldBeHScrolled(node2);
+  };
+  var getScrollVariables = function(axis, node2) {
+    return axis === "v" ? getVScrollVariables(node2) : getHScrollVariables(node2);
+  };
+  var getDirectionFactor = function(axis, direction) {
+    return axis === "h" && direction === "rtl" ? -1 : 1;
+  };
+  var handleScroll = function(axis, endTarget, event, sourceDelta, noOverscroll) {
+    var directionFactor = getDirectionFactor(axis, window.getComputedStyle(endTarget).direction);
+    var delta = directionFactor * sourceDelta;
+    var target = event.target;
+    var targetInLock = endTarget.contains(target);
+    var shouldCancelScroll = false;
+    var isDeltaPositive = delta > 0;
+    var availableScroll = 0;
+    var availableScrollTop = 0;
+    do {
+      var _a = getScrollVariables(axis, target), position2 = _a[0], scroll_1 = _a[1], capacity = _a[2];
+      var elementScroll = scroll_1 - capacity - directionFactor * position2;
+      if (position2 || elementScroll) {
+        if (elementCouldBeScrolled(axis, target)) {
+          availableScroll += elementScroll;
+          availableScrollTop += position2;
+        }
+      }
+      target = target.parentNode;
+    } while (
+      // portaled content
+      !targetInLock && target !== document.body || // self content
+      targetInLock && (endTarget.contains(target) || endTarget === target)
+    );
+    if (isDeltaPositive && (noOverscroll && availableScroll === 0 || !noOverscroll && delta > availableScroll)) {
+      shouldCancelScroll = true;
+    } else if (!isDeltaPositive && (noOverscroll && availableScrollTop === 0 || !noOverscroll && -delta > availableScrollTop)) {
+      shouldCancelScroll = true;
+    }
+    return shouldCancelScroll;
+  };
+  var getTouchXY = function(event) {
+    return "changedTouches" in event ? [event.changedTouches[0].clientX, event.changedTouches[0].clientY] : [0, 0];
+  };
+  var getDeltaXY = function(event) {
+    return [event.deltaX, event.deltaY];
+  };
+  var extractRef = function(ref) {
+    return ref && "current" in ref ? ref.current : ref;
+  };
+  var deltaCompare = function(x2, y2) {
+    return x2[0] === y2[0] && x2[1] === y2[1];
+  };
+  var generateStyle = function(id) {
+    return "\n  .block-interactivity-".concat(id, " {pointer-events: none;}\n  .allow-interactivity-").concat(id, " {pointer-events: all;}\n");
+  };
+  var idCounter = 0;
+  var lockStack = [];
+  function RemoveScrollSideCar(props) {
+    var shouldPreventQueue = _$1([]);
+    var touchStartRef = _$1([0, 0]);
+    var activeAxis = _$1();
+    var id = h$4(idCounter++)[0];
+    var Style2 = h$4(function() {
+      return styleSingleton();
+    })[0];
+    var lastProps = _$1(props);
+    p$6(function() {
+      lastProps.current = props;
+    }, [props]);
+    p$6(function() {
+      if (props.inert) {
+        document.body.classList.add("block-interactivity-".concat(id));
+        var allow_1 = __spreadArray([props.lockRef.current], (props.shards || []).map(extractRef), true).filter(Boolean);
+        allow_1.forEach(function(el) {
+          return el.classList.add("allow-interactivity-".concat(id));
+        });
+        return function() {
+          document.body.classList.remove("block-interactivity-".concat(id));
+          allow_1.forEach(function(el) {
+            return el.classList.remove("allow-interactivity-".concat(id));
+          });
+        };
+      }
+      return;
+    }, [props.inert, props.lockRef.current, props.shards]);
+    var shouldCancelEvent = T$4(function(event, parent) {
+      if ("touches" in event && event.touches.length === 2) {
+        return !lastProps.current.allowPinchZoom;
+      }
+      var touch = getTouchXY(event);
+      var touchStart = touchStartRef.current;
+      var deltaX = "deltaX" in event ? event.deltaX : touchStart[0] - touch[0];
+      var deltaY = "deltaY" in event ? event.deltaY : touchStart[1] - touch[1];
+      var currentAxis;
+      var target = event.target;
+      var moveDirection = Math.abs(deltaX) > Math.abs(deltaY) ? "h" : "v";
+      if ("touches" in event && moveDirection === "h" && target.type === "range") {
+        return false;
+      }
+      var canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
+      if (!canBeScrolledInMainDirection) {
+        return true;
+      }
+      if (canBeScrolledInMainDirection) {
+        currentAxis = moveDirection;
+      } else {
+        currentAxis = moveDirection === "v" ? "h" : "v";
+        canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
+      }
+      if (!canBeScrolledInMainDirection) {
+        return false;
+      }
+      if (!activeAxis.current && "changedTouches" in event && (deltaX || deltaY)) {
+        activeAxis.current = currentAxis;
+      }
+      if (!currentAxis) {
+        return true;
+      }
+      var cancelingAxis = activeAxis.current || currentAxis;
+      return handleScroll(cancelingAxis, parent, event, cancelingAxis === "h" ? deltaX : deltaY, true);
+    }, []);
+    var shouldPrevent = T$4(function(_event) {
+      var event = _event;
+      if (!lockStack.length || lockStack[lockStack.length - 1] !== Style2) {
+        return;
+      }
+      var delta = "deltaY" in event ? getDeltaXY(event) : getTouchXY(event);
+      var sourceEvent = shouldPreventQueue.current.filter(function(e2) {
+        return e2.name === event.type && e2.target === event.target && deltaCompare(e2.delta, delta);
+      })[0];
+      if (sourceEvent && sourceEvent.should) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+        return;
+      }
+      if (!sourceEvent) {
+        var shardNodes = (lastProps.current.shards || []).map(extractRef).filter(Boolean).filter(function(node2) {
+          return node2.contains(event.target);
+        });
+        var shouldStop = shardNodes.length > 0 ? shouldCancelEvent(event, shardNodes[0]) : !lastProps.current.noIsolation;
+        if (shouldStop) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+        }
+      }
+    }, []);
+    var shouldCancel = T$4(function(name, delta, target, should) {
+      var event = { name, delta, target, should };
+      shouldPreventQueue.current.push(event);
+      setTimeout(function() {
+        shouldPreventQueue.current = shouldPreventQueue.current.filter(function(e2) {
+          return e2 !== event;
+        });
+      }, 1);
+    }, []);
+    var scrollTouchStart = T$4(function(event) {
+      touchStartRef.current = getTouchXY(event);
+      activeAxis.current = void 0;
+    }, []);
+    var scrollWheel = T$4(function(event) {
+      shouldCancel(event.type, getDeltaXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
+    }, []);
+    var scrollTouchMove = T$4(function(event) {
+      shouldCancel(event.type, getTouchXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
+    }, []);
+    p$6(function() {
+      lockStack.push(Style2);
+      props.setCallbacks({
+        onScrollCapture: scrollWheel,
+        onWheelCapture: scrollWheel,
+        onTouchMoveCapture: scrollTouchMove
+      });
+      document.addEventListener("wheel", shouldPrevent, nonPassive);
+      document.addEventListener("touchmove", shouldPrevent, nonPassive);
+      document.addEventListener("touchstart", scrollTouchStart, nonPassive);
+      return function() {
+        lockStack = lockStack.filter(function(inst) {
+          return inst !== Style2;
+        });
+        document.removeEventListener("wheel", shouldPrevent, nonPassive);
+        document.removeEventListener("touchmove", shouldPrevent, nonPassive);
+        document.removeEventListener("touchstart", scrollTouchStart, nonPassive);
+      };
+    }, []);
+    var removeScrollBar = props.removeScrollBar, inert = props.inert;
+    return y$6(
+      k$3,
+      null,
+      inert ? y$6(Style2, { styles: generateStyle(id) }) : null,
+      removeScrollBar ? y$6(RemoveScrollBar, { gapMode: "margin" }) : null
+    );
+  }
+  const SideCar = exportSidecar(effectCar, RemoveScrollSideCar);
+  var ReactRemoveScroll = k$1(function(props, ref) {
+    return y$6(RemoveScroll, __assign({}, props, { ref, sideCar: SideCar }));
+  });
+  ReactRemoveScroll.classNames = RemoveScroll.classNames;
+  const $67UHm$RemoveScroll = ReactRemoveScroll;
+  var getDefaultParent = function(originalTarget) {
+    if (typeof document === "undefined") {
+      return null;
+    }
+    var sampleTarget = Array.isArray(originalTarget) ? originalTarget[0] : originalTarget;
+    return sampleTarget.ownerDocument.body;
+  };
+  var counterMap = /* @__PURE__ */ new WeakMap();
+  var uncontrolledNodes = /* @__PURE__ */ new WeakMap();
+  var markerMap = {};
+  var lockCount = 0;
+  var unwrapHost = function(node2) {
+    return node2 && (node2.host || unwrapHost(node2.parentNode));
+  };
+  var correctTargets = function(parent, targets) {
+    return targets.map(function(target) {
+      if (parent.contains(target)) {
+        return target;
+      }
+      var correctedTarget = unwrapHost(target);
+      if (correctedTarget && parent.contains(correctedTarget)) {
+        return correctedTarget;
+      }
+      console.error("aria-hidden", target, "in not contained inside", parent, ". Doing nothing");
+      return null;
+    }).filter(function(x2) {
+      return Boolean(x2);
+    });
+  };
+  var applyAttributeToOthers = function(originalTarget, parentNode, markerName, controlAttribute) {
+    var targets = correctTargets(parentNode, Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
+    if (!markerMap[markerName]) {
+      markerMap[markerName] = /* @__PURE__ */ new WeakMap();
+    }
+    var markerCounter = markerMap[markerName];
+    var hiddenNodes = [];
+    var elementsToKeep = /* @__PURE__ */ new Set();
+    var elementsToStop = new Set(targets);
+    var keep = function(el) {
+      if (!el || elementsToKeep.has(el)) {
+        return;
+      }
+      elementsToKeep.add(el);
+      keep(el.parentNode);
+    };
+    targets.forEach(keep);
+    var deep = function(parent) {
+      if (!parent || elementsToStop.has(parent)) {
+        return;
+      }
+      Array.prototype.forEach.call(parent.children, function(node2) {
+        if (elementsToKeep.has(node2)) {
+          deep(node2);
+        } else {
+          var attr = node2.getAttribute(controlAttribute);
+          var alreadyHidden = attr !== null && attr !== "false";
+          var counterValue = (counterMap.get(node2) || 0) + 1;
+          var markerValue = (markerCounter.get(node2) || 0) + 1;
+          counterMap.set(node2, counterValue);
+          markerCounter.set(node2, markerValue);
+          hiddenNodes.push(node2);
+          if (counterValue === 1 && alreadyHidden) {
+            uncontrolledNodes.set(node2, true);
+          }
+          if (markerValue === 1) {
+            node2.setAttribute(markerName, "true");
+          }
+          if (!alreadyHidden) {
+            node2.setAttribute(controlAttribute, "true");
+          }
+        }
+      });
+    };
+    deep(parentNode);
+    elementsToKeep.clear();
+    lockCount++;
+    return function() {
+      hiddenNodes.forEach(function(node2) {
+        var counterValue = counterMap.get(node2) - 1;
+        var markerValue = markerCounter.get(node2) - 1;
+        counterMap.set(node2, counterValue);
+        markerCounter.set(node2, markerValue);
+        if (!counterValue) {
+          if (!uncontrolledNodes.has(node2)) {
+            node2.removeAttribute(controlAttribute);
+          }
+          uncontrolledNodes.delete(node2);
+        }
+        if (!markerValue) {
+          node2.removeAttribute(markerName);
+        }
+      });
+      lockCount--;
+      if (!lockCount) {
+        counterMap = /* @__PURE__ */ new WeakMap();
+        counterMap = /* @__PURE__ */ new WeakMap();
+        uncontrolledNodes = /* @__PURE__ */ new WeakMap();
+        markerMap = {};
+      }
+    };
+  };
+  var hideOthers = function(originalTarget, parentNode, markerName) {
+    if (markerName === void 0) {
+      markerName = "data-aria-hidden";
+    }
+    var targets = Array.from(Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
+    var activeParentNode = parentNode || getDefaultParent(originalTarget);
+    if (!activeParentNode) {
+      return function() {
+        return null;
+      };
+    }
+    targets.push.apply(targets, Array.from(activeParentNode.querySelectorAll("[aria-live]")));
+    return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
+  };
+  const $5d3850c4d0b4e6c7$var$DIALOG_NAME = "Dialog";
+  const [$5d3850c4d0b4e6c7$var$createDialogContext, $5d3850c4d0b4e6c7$export$cc702773b8ea3e41] = $c512c27ab02ef895$export$50c7b4e9d9f19c1($5d3850c4d0b4e6c7$var$DIALOG_NAME);
+  const [$5d3850c4d0b4e6c7$var$DialogProvider, $5d3850c4d0b4e6c7$var$useDialogContext] = $5d3850c4d0b4e6c7$var$createDialogContext($5d3850c4d0b4e6c7$var$DIALOG_NAME);
+  const $5d3850c4d0b4e6c7$export$3ddf2d174ce01153 = (props) => {
+    const { __scopeDialog, children, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
+    const triggerRef = _$1(null);
+    const contentRef = _$1(null);
+    const [open = false, setOpen] = $71cd76cc60e0454e$export$6f32135080cb4c3({
+      prop: openProp,
+      defaultProp: defaultOpen,
+      onChange: onOpenChange
+    });
+    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogProvider, {
+      scope: __scopeDialog,
+      triggerRef,
+      contentRef,
+      contentId: $1746a345f3d73bb7$export$f680877a34711e37(),
+      titleId: $1746a345f3d73bb7$export$f680877a34711e37(),
+      descriptionId: $1746a345f3d73bb7$export$f680877a34711e37(),
+      open,
+      onOpenChange: setOpen,
+      onOpenToggle: T$4(
+        () => setOpen(
+          (prevOpen) => !prevOpen
+        ),
+        [
+          setOpen
+        ]
+      ),
+      modal
+    }, children);
+  };
+  const $5d3850c4d0b4e6c7$var$TRIGGER_NAME = "DialogTrigger";
+  const $5d3850c4d0b4e6c7$export$2e1e1122cf0cba88 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { __scopeDialog, ...triggerProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$TRIGGER_NAME, __scopeDialog);
+    const composedTriggerRef = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, context.triggerRef);
+    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.button, _extends({
+      type: "button",
+      "aria-haspopup": "dialog",
+      "aria-expanded": context.open,
+      "aria-controls": context.contentId,
+      "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
+    }, triggerProps, {
+      ref: composedTriggerRef,
+      onClick: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onClick, context.onOpenToggle)
+    }));
+  });
+  const $5d3850c4d0b4e6c7$var$PORTAL_NAME = "DialogPortal";
+  const [$5d3850c4d0b4e6c7$var$PortalProvider, $5d3850c4d0b4e6c7$var$usePortalContext] = $5d3850c4d0b4e6c7$var$createDialogContext($5d3850c4d0b4e6c7$var$PORTAL_NAME, {
+    forceMount: void 0
+  });
+  const $5d3850c4d0b4e6c7$export$dad7c95542bacce0 = (props) => {
+    const { __scopeDialog, forceMount, children, container } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$PORTAL_NAME, __scopeDialog);
+    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$PortalProvider, {
+      scope: __scopeDialog,
+      forceMount
+    }, O$1.map(
+      children,
+      (child) => /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
+        present: forceMount || context.open
+      }, /* @__PURE__ */ y$6($f1701beae083dbae$export$602eac185826482c, {
+        asChild: true,
+        container
+      }, child))
+    ));
+  };
+  const $5d3850c4d0b4e6c7$var$OVERLAY_NAME = "DialogOverlay";
+  const $5d3850c4d0b4e6c7$export$bd1d06c79be19e17 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const portalContext = $5d3850c4d0b4e6c7$var$usePortalContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, props.__scopeDialog);
+    const { forceMount = portalContext.forceMount, ...overlayProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, props.__scopeDialog);
+    return context.modal ? /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
+      present: forceMount || context.open
+    }, /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogOverlayImpl, _extends({}, overlayProps, {
+      ref: forwardedRef
+    }))) : null;
+  });
+  const $5d3850c4d0b4e6c7$var$DialogOverlayImpl = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { __scopeDialog, ...overlayProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, __scopeDialog);
+    return (
+      // Make sure `Content` is scrollable even when it doesn't live inside `RemoveScroll`
+      // ie. when `Overlay` and `Content` are siblings
+      /* @__PURE__ */ y$6($67UHm$RemoveScroll, {
+        as: $5e63c961fc1ce211$export$8c6ed5c666ac1360,
+        allowPinchZoom: true,
+        shards: [
+          context.contentRef
+        ]
+      }, /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({
+        "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
+      }, overlayProps, {
+        ref: forwardedRef,
+        style: {
+          pointerEvents: "auto",
+          ...overlayProps.style
+        }
+      })))
+    );
+  });
+  const $5d3850c4d0b4e6c7$var$CONTENT_NAME = "DialogContent";
+  const $5d3850c4d0b4e6c7$export$b6d9565de1e068cf = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const portalContext = $5d3850c4d0b4e6c7$var$usePortalContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
+    const { forceMount = portalContext.forceMount, ...contentProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
+    return /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
+      present: forceMount || context.open
+    }, context.modal ? /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentModal, _extends({}, contentProps, {
+      ref: forwardedRef
+    })) : /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentNonModal, _extends({}, contentProps, {
+      ref: forwardedRef
+    })));
+  });
+  const $5d3850c4d0b4e6c7$var$DialogContentModal = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
+    const contentRef = _$1(null);
+    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, context.contentRef, contentRef);
+    p$6(() => {
+      const content2 = contentRef.current;
+      if (content2)
+        return hideOthers(content2);
+    }, []);
+    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentImpl, _extends({}, props, {
+      ref: composedRefs,
+      trapFocus: context.open,
+      disableOutsidePointerEvents: true,
+      onCloseAutoFocus: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onCloseAutoFocus, (event) => {
+        var _context$triggerRef$c;
+        event.preventDefault();
+        (_context$triggerRef$c = context.triggerRef.current) === null || _context$triggerRef$c === void 0 || _context$triggerRef$c.focus();
+      }),
+      onPointerDownOutside: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onPointerDownOutside, (event) => {
+        const originalEvent = event.detail.originalEvent;
+        const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true;
+        const isRightClick = originalEvent.button === 2 || ctrlLeftClick;
+        if (isRightClick)
+          event.preventDefault();
+      }),
+      onFocusOutside: $e42e1063c40fb3ef$export$b9ecd428b558ff10(
+        props.onFocusOutside,
+        (event) => event.preventDefault()
+      )
+    }));
+  });
+  const $5d3850c4d0b4e6c7$var$DialogContentNonModal = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
+    const hasInteractedOutsideRef = _$1(false);
+    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentImpl, _extends({}, props, {
+      ref: forwardedRef,
+      trapFocus: false,
+      disableOutsidePointerEvents: false,
+      onCloseAutoFocus: (event) => {
+        var _props$onCloseAutoFoc;
+        (_props$onCloseAutoFoc = props.onCloseAutoFocus) === null || _props$onCloseAutoFoc === void 0 || _props$onCloseAutoFoc.call(props, event);
+        if (!event.defaultPrevented) {
+          var _context$triggerRef$c2;
+          if (!hasInteractedOutsideRef.current)
+            (_context$triggerRef$c2 = context.triggerRef.current) === null || _context$triggerRef$c2 === void 0 || _context$triggerRef$c2.focus();
+          event.preventDefault();
+        }
+        hasInteractedOutsideRef.current = false;
+      },
+      onInteractOutside: (event) => {
+        var _props$onInteractOuts, _context$triggerRef$c3;
+        (_props$onInteractOuts = props.onInteractOutside) === null || _props$onInteractOuts === void 0 || _props$onInteractOuts.call(props, event);
+        if (!event.defaultPrevented)
+          hasInteractedOutsideRef.current = true;
+        const target = event.target;
+        const targetIsTrigger = (_context$triggerRef$c3 = context.triggerRef.current) === null || _context$triggerRef$c3 === void 0 ? void 0 : _context$triggerRef$c3.contains(target);
+        if (targetIsTrigger)
+          event.preventDefault();
+      }
+    }));
+  });
+  const $5d3850c4d0b4e6c7$var$DialogContentImpl = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, __scopeDialog);
+    const contentRef = _$1(null);
+    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, contentRef);
+    $3db38b7d1fb3fe6a$export$b7ece24a22aeda8c();
+    return /* @__PURE__ */ y$6(k$3, null, /* @__PURE__ */ y$6($d3863c46a17e8a28$export$20e40289641fbbb6, {
+      asChild: true,
+      loop: true,
+      trapped: trapFocus,
+      onMountAutoFocus: onOpenAutoFocus,
+      onUnmountAutoFocus: onCloseAutoFocus
+    }, /* @__PURE__ */ y$6($5cb92bef7577960e$export$177fb62ff3ec1f22, _extends({
+      role: "dialog",
+      id: context.contentId,
+      "aria-describedby": context.descriptionId,
+      "aria-labelledby": context.titleId,
+      "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
+    }, contentProps, {
+      ref: composedRefs,
+      onDismiss: () => context.onOpenChange(false)
+    }))), false);
+  });
+  const $5d3850c4d0b4e6c7$var$TITLE_NAME = "DialogTitle";
+  const $5d3850c4d0b4e6c7$export$16f7638e4a34b909 = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { __scopeDialog, ...titleProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$TITLE_NAME, __scopeDialog);
+    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.h2, _extends({
+      id: context.titleId
+    }, titleProps, {
+      ref: forwardedRef
+    }));
+  });
+  const $5d3850c4d0b4e6c7$var$CLOSE_NAME = "DialogClose";
+  const $5d3850c4d0b4e6c7$export$fba2fb7cd781b7ac = /* @__PURE__ */ k$1((props, forwardedRef) => {
+    const { __scopeDialog, ...closeProps } = props;
+    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CLOSE_NAME, __scopeDialog);
+    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.button, _extends({
+      type: "button"
+    }, closeProps, {
+      ref: forwardedRef,
+      onClick: $e42e1063c40fb3ef$export$b9ecd428b558ff10(
+        props.onClick,
+        () => context.onOpenChange(false)
+      )
+    }));
+  });
+  function $5d3850c4d0b4e6c7$var$getState(open) {
+    return open ? "open" : "closed";
+  }
+  const $5d3850c4d0b4e6c7$export$be92b6f5f03c0fe9 = $5d3850c4d0b4e6c7$export$3ddf2d174ce01153;
+  const $5d3850c4d0b4e6c7$export$41fb9f06171c75f4 = $5d3850c4d0b4e6c7$export$2e1e1122cf0cba88;
+  const $5d3850c4d0b4e6c7$export$602eac185826482c = $5d3850c4d0b4e6c7$export$dad7c95542bacce0;
+  const $5d3850c4d0b4e6c7$export$c6fdb837b070b4ff = $5d3850c4d0b4e6c7$export$bd1d06c79be19e17;
+  const $5d3850c4d0b4e6c7$export$7c6e2c02157bb7d2 = $5d3850c4d0b4e6c7$export$b6d9565de1e068cf;
+  const $5d3850c4d0b4e6c7$export$f99233281efd08a0 = $5d3850c4d0b4e6c7$export$16f7638e4a34b909;
+  const $5d3850c4d0b4e6c7$export$f39c2d165cd861fe = $5d3850c4d0b4e6c7$export$fba2fb7cd781b7ac;
   function t$1(t2) {
     return t2.split("-")[0];
   }
@@ -2671,118 +4359,6 @@ body[data-time-format="24"] span[data-time-format="24"] {
       }
     };
   };
-  const $5e63c961fc1ce211$export$8c6ed5c666ac1360 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { children, ...slotProps } = props;
-    const childrenArray = O$1.toArray(children);
-    const slottable = childrenArray.find($5e63c961fc1ce211$var$isSlottable);
-    if (slottable) {
-      const newElement = slottable.props.children;
-      const newChildren = childrenArray.map((child) => {
-        if (child === slottable) {
-          if (O$1.count(newElement) > 1)
-            return O$1.only(null);
-          return /* @__PURE__ */ an(newElement) ? newElement.props.children : null;
-        } else
-          return child;
-      });
-      return /* @__PURE__ */ y$6($5e63c961fc1ce211$var$SlotClone, _extends({}, slotProps, {
-        ref: forwardedRef
-      }), /* @__PURE__ */ an(newElement) ? /* @__PURE__ */ hn(newElement, void 0, newChildren) : null);
-    }
-    return /* @__PURE__ */ y$6($5e63c961fc1ce211$var$SlotClone, _extends({}, slotProps, {
-      ref: forwardedRef
-    }), children);
-  });
-  $5e63c961fc1ce211$export$8c6ed5c666ac1360.displayName = "Slot";
-  const $5e63c961fc1ce211$var$SlotClone = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { children, ...slotProps } = props;
-    if (/* @__PURE__ */ an(children))
-      return /* @__PURE__ */ hn(children, {
-        ...$5e63c961fc1ce211$var$mergeProps(slotProps, children.props),
-        ref: $6ed0406888f73fc4$export$43e446d32b3d21af(forwardedRef, children.ref)
-      });
-    return O$1.count(children) > 1 ? O$1.only(null) : null;
-  });
-  $5e63c961fc1ce211$var$SlotClone.displayName = "SlotClone";
-  const $5e63c961fc1ce211$export$d9f1ccf0bdb05d45 = ({ children }) => {
-    return /* @__PURE__ */ y$6(k$3, null, children);
-  };
-  function $5e63c961fc1ce211$var$isSlottable(child) {
-    return /* @__PURE__ */ an(child) && child.type === $5e63c961fc1ce211$export$d9f1ccf0bdb05d45;
-  }
-  function $5e63c961fc1ce211$var$mergeProps(slotProps, childProps) {
-    const overrideProps = {
-      ...childProps
-    };
-    for (const propName in childProps) {
-      const slotPropValue = slotProps[propName];
-      const childPropValue = childProps[propName];
-      const isHandler = /^on[A-Z]/.test(propName);
-      if (isHandler) {
-        if (slotPropValue && childPropValue)
-          overrideProps[propName] = (...args) => {
-            childPropValue(...args);
-            slotPropValue(...args);
-          };
-        else if (slotPropValue)
-          overrideProps[propName] = slotPropValue;
-      } else if (propName === "style")
-        overrideProps[propName] = {
-          ...slotPropValue,
-          ...childPropValue
-        };
-      else if (propName === "className")
-        overrideProps[propName] = [
-          slotPropValue,
-          childPropValue
-        ].filter(Boolean).join(" ");
-    }
-    return {
-      ...slotProps,
-      ...overrideProps
-    };
-  }
-  const $8927f6f2acc4f386$var$NODES = [
-    "a",
-    "button",
-    "div",
-    "form",
-    "h2",
-    "h3",
-    "img",
-    "input",
-    "label",
-    "li",
-    "nav",
-    "ol",
-    "p",
-    "span",
-    "svg",
-    "ul"
-  ];
-  const $8927f6f2acc4f386$export$250ffa63cdc0d034 = $8927f6f2acc4f386$var$NODES.reduce((primitive, node2) => {
-    const Node = /* @__PURE__ */ k$1((props, forwardedRef) => {
-      const { asChild, ...primitiveProps } = props;
-      const Comp = asChild ? $5e63c961fc1ce211$export$8c6ed5c666ac1360 : node2;
-      p$6(() => {
-        window[Symbol.for("radix-ui")] = true;
-      }, []);
-      return /* @__PURE__ */ y$6(Comp, _extends({}, primitiveProps, {
-        ref: forwardedRef
-      }));
-    });
-    Node.displayName = `Primitive.${node2}`;
-    return {
-      ...primitive,
-      [node2]: Node
-    };
-  }, {});
-  function $8927f6f2acc4f386$export$6d1a0317bde7de7f(target, event) {
-    if (target)
-      mn(
-        () => target.dispatchEvent(event)
-      );
-  }
   const $7e8f5cd07187803e$export$21b07c8f274aebd5 = /* @__PURE__ */ k$1((props, forwardedRef) => {
     const { children, width = 10, height = 5, ...arrowProps } = props;
     return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.svg, _extends({}, arrowProps, {
@@ -2796,8 +4372,6 @@ body[data-time-format="24"] span[data-time-format="24"] {
     }));
   });
   const $7e8f5cd07187803e$export$be92b6f5f03c0fe9 = $7e8f5cd07187803e$export$21b07c8f274aebd5;
-  const $9f79659886946c16$export$e5c5a5f917a5871c = Boolean(globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) ? y$5 : () => {
-  };
   function $db6c3485150b8e66$export$1ab7ae714698c4b8(element2) {
     const [size, setSize] = h$4(void 0);
     $9f79659886946c16$export$e5c5a5f917a5871c(() => {
@@ -3149,343 +4723,6 @@ body[data-time-format="24"] span[data-time-format="24"] {
   const $cf1ac5d9fe0e8206$export$b688253958b8dfe7 = $cf1ac5d9fe0e8206$export$ecd4e1ccab6ed6d;
   const $cf1ac5d9fe0e8206$export$7c6e2c02157bb7d2 = $cf1ac5d9fe0e8206$export$bc4ae5855d3c4fc;
   const $cf1ac5d9fe0e8206$export$21b07c8f274aebd5 = $cf1ac5d9fe0e8206$export$79d62cd4e10a3fd0;
-  const $f1701beae083dbae$export$602eac185826482c = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    var _globalThis$document;
-    const { container = globalThis === null || globalThis === void 0 ? void 0 : (_globalThis$document = globalThis.document) === null || _globalThis$document === void 0 ? void 0 : _globalThis$document.body, ...portalProps } = props;
-    return container ? /* @__PURE__ */ wn.createPortal(/* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({}, portalProps, {
-      ref: forwardedRef
-    })), container) : null;
-  });
-  function $fe963b355347cc68$export$3e6543de14f8614f(initialState, machine) {
-    return s$6((state, event) => {
-      const nextState = machine[state][event];
-      return nextState !== null && nextState !== void 0 ? nextState : state;
-    }, initialState);
-  }
-  const $921a889cee6df7e8$export$99c2b779aa4e8b8b = (props) => {
-    const { present, children } = props;
-    const presence = $921a889cee6df7e8$var$usePresence(present);
-    const child = typeof children === "function" ? children({
-      present: presence.isPresent
-    }) : O$1.only(children);
-    const ref = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(presence.ref, child.ref);
-    const forceMount = typeof children === "function";
-    return forceMount || presence.isPresent ? /* @__PURE__ */ hn(child, {
-      ref
-    }) : null;
-  };
-  $921a889cee6df7e8$export$99c2b779aa4e8b8b.displayName = "Presence";
-  function $921a889cee6df7e8$var$usePresence(present) {
-    const [node1, setNode] = h$4();
-    const stylesRef = _$1({});
-    const prevPresentRef = _$1(present);
-    const prevAnimationNameRef = _$1("none");
-    const initialState = present ? "mounted" : "unmounted";
-    const [state, send] = $fe963b355347cc68$export$3e6543de14f8614f(initialState, {
-      mounted: {
-        UNMOUNT: "unmounted",
-        ANIMATION_OUT: "unmountSuspended"
-      },
-      unmountSuspended: {
-        MOUNT: "mounted",
-        ANIMATION_END: "unmounted"
-      },
-      unmounted: {
-        MOUNT: "mounted"
-      }
-    });
-    p$6(() => {
-      const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
-      prevAnimationNameRef.current = state === "mounted" ? currentAnimationName : "none";
-    }, [
-      state
-    ]);
-    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
-      const styles = stylesRef.current;
-      const wasPresent = prevPresentRef.current;
-      const hasPresentChanged = wasPresent !== present;
-      if (hasPresentChanged) {
-        const prevAnimationName = prevAnimationNameRef.current;
-        const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(styles);
-        if (present)
-          send("MOUNT");
-        else if (currentAnimationName === "none" || (styles === null || styles === void 0 ? void 0 : styles.display) === "none")
-          send("UNMOUNT");
-        else {
-          const isAnimating = prevAnimationName !== currentAnimationName;
-          if (wasPresent && isAnimating)
-            send("ANIMATION_OUT");
-          else
-            send("UNMOUNT");
-        }
-        prevPresentRef.current = present;
-      }
-    }, [
-      present,
-      send
-    ]);
-    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
-      if (node1) {
-        const handleAnimationEnd = (event) => {
-          const currentAnimationName = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
-          const isCurrentAnimation = currentAnimationName.includes(event.animationName);
-          if (event.target === node1 && isCurrentAnimation)
-            mn(
-              () => send("ANIMATION_END")
-            );
-        };
-        const handleAnimationStart = (event) => {
-          if (event.target === node1)
-            prevAnimationNameRef.current = $921a889cee6df7e8$var$getAnimationName(stylesRef.current);
-        };
-        node1.addEventListener("animationstart", handleAnimationStart);
-        node1.addEventListener("animationcancel", handleAnimationEnd);
-        node1.addEventListener("animationend", handleAnimationEnd);
-        return () => {
-          node1.removeEventListener("animationstart", handleAnimationStart);
-          node1.removeEventListener("animationcancel", handleAnimationEnd);
-          node1.removeEventListener("animationend", handleAnimationEnd);
-        };
-      } else
-        send("ANIMATION_END");
-    }, [
-      node1,
-      send
-    ]);
-    return {
-      isPresent: [
-        "mounted",
-        "unmountSuspended"
-      ].includes(state),
-      ref: T$4((node2) => {
-        if (node2)
-          stylesRef.current = getComputedStyle(node2);
-        setNode(node2);
-      }, [])
-    };
-  }
-  function $921a889cee6df7e8$var$getAnimationName(styles) {
-    return (styles === null || styles === void 0 ? void 0 : styles.animationName) || "none";
-  }
-  function $addc16e1bbe58fd0$export$3a72a57244d6e765(onEscapeKeyDownProp, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
-    const onEscapeKeyDown = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onEscapeKeyDownProp);
-    p$6(() => {
-      const handleKeyDown = (event) => {
-        if (event.key === "Escape")
-          onEscapeKeyDown(event);
-      };
-      ownerDocument.addEventListener("keydown", handleKeyDown);
-      return () => ownerDocument.removeEventListener("keydown", handleKeyDown);
-    }, [
-      onEscapeKeyDown,
-      ownerDocument
-    ]);
-  }
-  const $5cb92bef7577960e$var$CONTEXT_UPDATE = "dismissableLayer.update";
-  const $5cb92bef7577960e$var$POINTER_DOWN_OUTSIDE = "dismissableLayer.pointerDownOutside";
-  const $5cb92bef7577960e$var$FOCUS_OUTSIDE = "dismissableLayer.focusOutside";
-  let $5cb92bef7577960e$var$originalBodyPointerEvents;
-  const $5cb92bef7577960e$var$DismissableLayerContext = /* @__PURE__ */ G$1({
-    layers: /* @__PURE__ */ new Set(),
-    layersWithOutsidePointerEventsDisabled: /* @__PURE__ */ new Set(),
-    branches: /* @__PURE__ */ new Set()
-  });
-  const $5cb92bef7577960e$export$177fb62ff3ec1f22 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    var _node$ownerDocument;
-    const { disableOutsidePointerEvents = false, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, onDismiss, ...layerProps } = props;
-    const context = q$1($5cb92bef7577960e$var$DismissableLayerContext);
-    const [node1, setNode] = h$4(null);
-    const ownerDocument = (_node$ownerDocument = node1 === null || node1 === void 0 ? void 0 : node1.ownerDocument) !== null && _node$ownerDocument !== void 0 ? _node$ownerDocument : globalThis === null || globalThis === void 0 ? void 0 : globalThis.document;
-    const [, force] = h$4({});
-    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(
-      forwardedRef,
-      (node2) => setNode(node2)
-    );
-    const layers = Array.from(context.layers);
-    const [highestLayerWithOutsidePointerEventsDisabled] = [
-      ...context.layersWithOutsidePointerEventsDisabled
-    ].slice(-1);
-    const highestLayerWithOutsidePointerEventsDisabledIndex = layers.indexOf(highestLayerWithOutsidePointerEventsDisabled);
-    const index2 = node1 ? layers.indexOf(node1) : -1;
-    const isBodyPointerEventsDisabled = context.layersWithOutsidePointerEventsDisabled.size > 0;
-    const isPointerEventsEnabled = index2 >= highestLayerWithOutsidePointerEventsDisabledIndex;
-    const pointerDownOutside = $5cb92bef7577960e$var$usePointerDownOutside((event) => {
-      const target = event.target;
-      const isPointerDownOnBranch = [
-        ...context.branches
-      ].some(
-        (branch) => branch.contains(target)
-      );
-      if (!isPointerEventsEnabled || isPointerDownOnBranch)
-        return;
-      onPointerDownOutside === null || onPointerDownOutside === void 0 || onPointerDownOutside(event);
-      onInteractOutside === null || onInteractOutside === void 0 || onInteractOutside(event);
-      if (!event.defaultPrevented)
-        onDismiss === null || onDismiss === void 0 || onDismiss();
-    }, ownerDocument);
-    const focusOutside = $5cb92bef7577960e$var$useFocusOutside((event) => {
-      const target = event.target;
-      const isFocusInBranch = [
-        ...context.branches
-      ].some(
-        (branch) => branch.contains(target)
-      );
-      if (isFocusInBranch)
-        return;
-      onFocusOutside === null || onFocusOutside === void 0 || onFocusOutside(event);
-      onInteractOutside === null || onInteractOutside === void 0 || onInteractOutside(event);
-      if (!event.defaultPrevented)
-        onDismiss === null || onDismiss === void 0 || onDismiss();
-    }, ownerDocument);
-    $addc16e1bbe58fd0$export$3a72a57244d6e765((event) => {
-      const isHighestLayer = index2 === context.layers.size - 1;
-      if (!isHighestLayer)
-        return;
-      onEscapeKeyDown === null || onEscapeKeyDown === void 0 || onEscapeKeyDown(event);
-      if (!event.defaultPrevented && onDismiss) {
-        event.preventDefault();
-        onDismiss();
-      }
-    }, ownerDocument);
-    p$6(() => {
-      if (!node1)
-        return;
-      if (disableOutsidePointerEvents) {
-        if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
-          $5cb92bef7577960e$var$originalBodyPointerEvents = ownerDocument.body.style.pointerEvents;
-          ownerDocument.body.style.pointerEvents = "none";
-        }
-        context.layersWithOutsidePointerEventsDisabled.add(node1);
-      }
-      context.layers.add(node1);
-      $5cb92bef7577960e$var$dispatchUpdate();
-      return () => {
-        if (disableOutsidePointerEvents && context.layersWithOutsidePointerEventsDisabled.size === 1)
-          ownerDocument.body.style.pointerEvents = $5cb92bef7577960e$var$originalBodyPointerEvents;
-      };
-    }, [
-      node1,
-      ownerDocument,
-      disableOutsidePointerEvents,
-      context
-    ]);
-    p$6(() => {
-      return () => {
-        if (!node1)
-          return;
-        context.layers.delete(node1);
-        context.layersWithOutsidePointerEventsDisabled.delete(node1);
-        $5cb92bef7577960e$var$dispatchUpdate();
-      };
-    }, [
-      node1,
-      context
-    ]);
-    p$6(() => {
-      const handleUpdate = () => force({});
-      document.addEventListener($5cb92bef7577960e$var$CONTEXT_UPDATE, handleUpdate);
-      return () => document.removeEventListener($5cb92bef7577960e$var$CONTEXT_UPDATE, handleUpdate);
-    }, []);
-    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({}, layerProps, {
-      ref: composedRefs,
-      style: {
-        pointerEvents: isBodyPointerEventsDisabled ? isPointerEventsEnabled ? "auto" : "none" : void 0,
-        ...props.style
-      },
-      onFocusCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onFocusCapture, focusOutside.onFocusCapture),
-      onBlurCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onBlurCapture, focusOutside.onBlurCapture),
-      onPointerDownCapture: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onPointerDownCapture, pointerDownOutside.onPointerDownCapture)
-    }));
-  });
-  function $5cb92bef7577960e$var$usePointerDownOutside(onPointerDownOutside, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
-    const handlePointerDownOutside = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onPointerDownOutside);
-    const isPointerInsideReactTreeRef = _$1(false);
-    const handleClickRef = _$1(() => {
-    });
-    p$6(() => {
-      const handlePointerDown = (event) => {
-        if (event.target && !isPointerInsideReactTreeRef.current) {
-          let handleAndDispatchPointerDownOutsideEvent = function() {
-            $5cb92bef7577960e$var$handleAndDispatchCustomEvent($5cb92bef7577960e$var$POINTER_DOWN_OUTSIDE, handlePointerDownOutside, eventDetail, {
-              discrete: true
-            });
-          };
-          const eventDetail = {
-            originalEvent: event
-          };
-          if (event.pointerType === "touch") {
-            ownerDocument.removeEventListener("click", handleClickRef.current);
-            handleClickRef.current = handleAndDispatchPointerDownOutsideEvent;
-            ownerDocument.addEventListener("click", handleClickRef.current, {
-              once: true
-            });
-          } else
-            handleAndDispatchPointerDownOutsideEvent();
-        }
-        isPointerInsideReactTreeRef.current = false;
-      };
-      const timerId = window.setTimeout(() => {
-        ownerDocument.addEventListener("pointerdown", handlePointerDown);
-      }, 0);
-      return () => {
-        window.clearTimeout(timerId);
-        ownerDocument.removeEventListener("pointerdown", handlePointerDown);
-        ownerDocument.removeEventListener("click", handleClickRef.current);
-      };
-    }, [
-      ownerDocument,
-      handlePointerDownOutside
-    ]);
-    return {
-      // ensures we check React component tree (not just DOM tree)
-      onPointerDownCapture: () => isPointerInsideReactTreeRef.current = true
-    };
-  }
-  function $5cb92bef7577960e$var$useFocusOutside(onFocusOutside, ownerDocument = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) {
-    const handleFocusOutside = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onFocusOutside);
-    const isFocusInsideReactTreeRef = _$1(false);
-    p$6(() => {
-      const handleFocus = (event) => {
-        if (event.target && !isFocusInsideReactTreeRef.current) {
-          const eventDetail = {
-            originalEvent: event
-          };
-          $5cb92bef7577960e$var$handleAndDispatchCustomEvent($5cb92bef7577960e$var$FOCUS_OUTSIDE, handleFocusOutside, eventDetail, {
-            discrete: false
-          });
-        }
-      };
-      ownerDocument.addEventListener("focusin", handleFocus);
-      return () => ownerDocument.removeEventListener("focusin", handleFocus);
-    }, [
-      ownerDocument,
-      handleFocusOutside
-    ]);
-    return {
-      onFocusCapture: () => isFocusInsideReactTreeRef.current = true,
-      onBlurCapture: () => isFocusInsideReactTreeRef.current = false
-    };
-  }
-  function $5cb92bef7577960e$var$dispatchUpdate() {
-    const event = new CustomEvent($5cb92bef7577960e$var$CONTEXT_UPDATE);
-    document.dispatchEvent(event);
-  }
-  function $5cb92bef7577960e$var$handleAndDispatchCustomEvent(name, handler, detail, { discrete }) {
-    const target = detail.originalEvent.target;
-    const event = new CustomEvent(name, {
-      bubbles: false,
-      cancelable: true,
-      detail
-    });
-    if (handler)
-      target.addEventListener(name, handler, {
-        once: true
-      });
-    if (discrete)
-      $8927f6f2acc4f386$export$6d1a0317bde7de7f(target, event);
-    else
-      target.dispatchEvent(event);
-  }
   let $cef8881cdc69808e$var$originalBodyUserSelect;
   const $cef8881cdc69808e$var$HOVERCARD_NAME = "HoverCard";
   const [$cef8881cdc69808e$var$createHoverCardContext, $cef8881cdc69808e$export$47b6998a836b7260] = $c512c27ab02ef895$export$50c7b4e9d9f19c1($cef8881cdc69808e$var$HOVERCARD_NAME, [
@@ -7161,9 +8398,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "Enable on Markdown files",
     "Use 24-hour format": "Use 24-hour format (eg. 23:59)",
     "Export Format": "Export Format",
-    "Export JSON Format Description": "Export JSON in OpenAI Official Format",
     "Export Metadata": "Export Metadata",
     "Export Metadata Description": "Add metadata to exported Markdown and HTML files.",
+    "OpenAI Official Format": "OpenAI Official Format",
     "Conversation Archive Alert": "Are you sure you want to archive all selected conversations?",
     "Conversation Archived Message": "All selected conversations have been archived. Please refresh the page to see the changes.",
     "Conversation Delete Alert": "Are you sure you want to delete all selected conversations?",
@@ -7216,9 +8453,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "Habilitar en archivos Markdown",
     "Use 24-hour format": "Usar formato de 24 horas (ej. 23:59)",
     "Export Format": "Formato de Exportación",
-    "Export JSON Format Description": "Exportar JSON en el Formato Oficial de OpenAI",
     "Export Metadata": "Exportar Metadatos",
     "Export Metadata Description": "Añadir Metadatos a los archivos Markdown y HTML exportados.",
+    "OpenAI Official Format": "Formato Oficial de OpenAI",
     "Conversation Archive Alert": "¿Estás seguro que quieres archivar todas las conversaciones seleccionadas?",
     "Conversation Archived Message": "Todos las conversaciones seleccionadas se han archivado. Por favor refresca la página para ver los cambios.",
     "Conversation Delete Alert": "¿Estás seguro que quieres borrar todas las conversaciones seleccionadas?",
@@ -7269,11 +8506,11 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Conversation Timestamp Description": "Akan ditampilkan pada halaman.",
     "Enable on HTML": "Aktifkan pada file HTML",
     "Enable on Markdown": "Aktifkan pada file Markdown",
-    "Use 24-hour format": "Gunakan format 24 jam (mis. 23:59)",
+    "Use 24-hour format": "Gunakan format 24 jam (contohnya: 23:59)",
     "Export Format": "Format Ekspor",
-    "Export JSON Format Description": "Ekspor JSON dalam Format Resmi OpenAI",
     "Export Metadata": "Ekspor Metada",
     "Export Metadata Description": "Tambahkan metadata ke file Markdown dan HTML yang diekspor.",
+    "OpenAI Official Format": "Format Resmi OpenAI",
     "Conversation Archive Alert": "Apakah Anda yakin ingin mengarsipkan semua percakapan yang dipilih?",
     "Conversation Archived Message": "Semua percakapan yang dipilih telah diarsipkan. Harap segarkan halaman untuk melihat perubahan.",
     "Conversation Delete Alert": "Apakah Anda yakin ingin menghapus semua percakapan yang dipilih?",
@@ -7326,9 +8563,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "Markdown ファイルで有効にする",
     "Use 24-hour format": "24時間形式を使用する (例: 23:59)",
     "Export Format": "エクスポートフォーマット",
-    "Export JSON Format Description": "OpenAI公式フォーマットでのJSONのエクスポート",
     "Export Metadata": "メタデータをエクスポート",
     "Export Metadata Description": "エクスポートされたMarkdownおよびHTMLファイルにメタデータを追加します。",
+    "OpenAI Official Format": "OpenAI公式フォーマット",
     "Conversation Archive Alert": "選択したすべての会話をアーカイブしてもよろしいですか？",
     "Conversation Archived Message": "選択したすべての会話がアーカイブされました。変更を表示するには、ページを更新してください。",
     "Conversation Delete Alert": "選択したすべての会話を削除してもよろしいですか？",
@@ -7381,9 +8618,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "Markdown dosyalarında etkinleştir",
     "Use 24-hour format": "24 saat biçimini kullan (örn. 23:59)",
     "Export Format": "Dışa Aktarma Formatı",
-    "Export JSON Format Description": "OpenAI Resmi Formatında JSON Dışa Aktarma",
     "Export Metadata": "Üst veriyi dışa aktar",
     "Export Metadata Description": "Dışa aktarılan Markdown ve HTML dosyalarına üst veri ekle",
+    "OpenAI Official Format": "OpenAI Resmi Format",
     "Conversation Archive Alert": "Seçilen tüm konuşmaları arşivlemek istediğinizden emin misiniz?",
     "Conversation Archived Message": "Seçilen tüm konuşmalar arşivlendi. Değişiklikleri görmek için sayfayı yenileyin.",
     "Conversation Delete Alert": "Seçilen tüm konuşmaları silmek istediğinizden emin misiniz?",
@@ -7436,9 +8673,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "在 Markdown 文件上启用",
     "Use 24-hour format": "使用24小时制 (例如 23:59)",
     "Export Format": "导出格式",
-    "Export JSON Format Description": "以 OpenAI 官方格式导出JSON",
     "Export Metadata": "导出元数据",
     "Export Metadata Description": "会添加至 Markdown 以及 HTML 导出。",
+    "OpenAI Official Format": "OpenAI 官方格式",
     "Conversation Archive Alert": "确定要归档所有选取的对话？",
     "Conversation Archived Message": "所有所选的对话已归档。请刷新页面。",
     "Conversation Delete Alert": "确定要删除所有选取的对话？",
@@ -7491,9 +8728,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     "Enable on Markdown": "在 Markdown 檔案上啟用",
     "Use 24-hour format": "使用24小時制 (例如 23:59)",
     "Export Format": "匯出格式",
-    "Export JSON Format Description": "以 OpenAI 官方格式匯出 JSON",
     "Export Metadata": "匯出元資料",
     "Export Metadata Description": "會添加至 Markdown 以及 HTML 匯出。",
+    "OpenAI Official Format": "OpenAI 官方格式",
     "Conversation Archive Alert": "確定要封存所有選取的對話？",
     "Conversation Archived Message": "所有選取的對話已封存。請重新整理頁面。",
     "Conversation Delete Alert": "確定要刪除所有選取的對話？",
@@ -8312,6 +9549,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
   const sanitize$1 = /* @__PURE__ */ getDefaultExportFromCjs(sanitizeFilename);
   function noop() {
   }
+  function nonNullable(x2) {
+    return x2 != null;
+  }
   function onloadSafe(fn2) {
     if (document.readyState === "complete") {
       fn2();
@@ -8338,6 +9578,9 @@ body[data-time-format="24"] span[data-time-format="24"] {
     if (!timestamp2)
       return "";
     return new Date(timestamp2 * 1e3).toISOString();
+  }
+  function jsonlStringify(list2) {
+    return list2.map((msg) => JSON.stringify(msg)).join("\n");
   }
   function downloadFile(filename, type, content2) {
     const blob = content2 instanceof Blob ? content2 : new Blob([content2], {
@@ -14125,7 +15368,7 @@ body[data-time-format="24"] span[data-time-format="24"] {
     string,
     text: text$3
   }, Symbol.toStringTag, { value: "Module" }));
-  function parse$1(options = {}) {
+  function parse(options = {}) {
     const constructs2 = combineExtensions(
       // @ts-expect-error Same as above.
       [defaultConstructs].concat(options.extensions || [])
@@ -14308,7 +15551,7 @@ body[data-time-format="24"] span[data-time-format="24"] {
       }
       return compiler(options)(
         postprocess(
-          parse$1(options).document().write(preprocess()(value, encoding, true))
+          parse(options).document().write(preprocess()(value, encoding, true))
         )
       );
     }
@@ -16205,16 +17448,16 @@ body[data-time-format="24"] span[data-time-format="24"] {
     return marker;
   }
   function checkListItemIndent(state) {
-    const style2 = state.options.listItemIndent || "tab";
-    if (style2 === 1 || style2 === "1") {
+    const style = state.options.listItemIndent || "tab";
+    if (style === 1 || style === "1") {
       return "one";
     }
-    if (style2 !== "tab" && style2 !== "one" && style2 !== "mixed") {
+    if (style !== "tab" && style !== "one" && style !== "mixed") {
       throw new Error(
-        "Cannot serialize items with `" + style2 + "` for `options.listItemIndent`, expected `tab`, `one`, or `mixed`"
+        "Cannot serialize items with `" + style + "` for `options.listItemIndent`, expected `tab`, `one`, or `mixed`"
       );
     }
-    return style2;
+    return style;
   }
   function listItem$1(node2, parent, state, info) {
     const listItemIndent = checkListItemIndent(state);
@@ -19780,9 +21023,10 @@ ${content2.text}
     }
     const isDarkMode = document.documentElement.classList.contains("dark");
     effect.add(() => {
-      const style2 = document.createElement("style");
-      style2.textContent = `
-            [data-testid^="conversation-turn-"] {
+      const style = document.createElement("style");
+      style.textContent = `
+        main [class^='react-scroll-to-bottom'] > div > div,
+        [data-testid^="conversation-turn-"] {
                 color: ${isDarkMode ? "#ececf1" : "#0f0f0f"};
                 background-color: ${isDarkMode ? "rgb(52,53,65)" : "#fff"};
             }
@@ -19796,8 +21040,8 @@ ${content2.text}
                 padding-bottom: 2px;
             }
             `;
-      thread.appendChild(style2);
-      return () => style2.remove();
+      thread.appendChild(style);
+      return () => style.remove();
     });
     const topHeader = thread.querySelector(".sticky.top-0");
     if (topHeader) {
@@ -19872,7 +21116,82 @@ ${content2.text}
     window.URL.revokeObjectURL(dataUrl);
     return true;
   }
-  async function exportToJson(fileNameFormat, options) {
+  function convertMessageToTavern(node2) {
+    if (!node2.message || node2.message.content.content_type !== "text") {
+      return null;
+    }
+    const authorRole = node2.message.author.role;
+    const createTime = node2.message.create_time || (/* @__PURE__ */ new Date()).getTime() / 1e3;
+    const text2 = node2.message.content.parts.join("\n");
+    return {
+      name: authorRole === "assistant" ? "Assistant" : "You",
+      is_user: authorRole === "user",
+      // This is the opposite of is_user! Not always true.
+      is_name: authorRole === "assistant",
+      send_date: createTime,
+      mes: text2,
+      swipes: [text2],
+      swipe_id: 0
+    };
+  }
+  function convertToTavern(conversation) {
+    const messages = [{
+      user_name: "You",
+      character_name: "Assistant"
+    }, ...conversation.conversationNodes.map(convertMessageToTavern).filter(nonNullable)];
+    return jsonlStringify(messages);
+  }
+  function convertToOoba(conversation) {
+    const pairs = [];
+    const messages = conversation.conversationNodes.filter((node2) => {
+      var _a, _b;
+      return ((_a = node2.message) == null ? void 0 : _a.author.role) !== "tool" && ((_b = node2.message) == null ? void 0 : _b.content.content_type) === "text";
+    });
+    let idx = 0;
+    while (idx < messages.length - 1) {
+      const message = messages[idx];
+      const nextMessage = messages[idx + 1];
+      if (!message.message || !nextMessage.message || message.message.content.content_type !== "text" || nextMessage.message.content.content_type !== "text") {
+        idx += 1;
+        continue;
+      }
+      const role = message.message.author.role;
+      const text2 = message.message.content.parts[0];
+      const nextRole = nextMessage.message.author.role;
+      const nextText = nextMessage.message.content.parts[0];
+      if (role === "system") {
+        if (text2 !== "") {
+          pairs.push(["<|BEGIN-VISIBLE-CHAT|>", text2]);
+        }
+        idx += 1;
+        continue;
+      }
+      if (role === "user") {
+        if (nextRole === "assistant") {
+          pairs.push([text2, nextText]);
+          idx += 2;
+          continue;
+        } else if (nextRole === "user") {
+          pairs.push([text2, ""]);
+          idx += 1;
+          continue;
+        }
+      }
+      if (role === "assistant") {
+        pairs.push(["", text2]);
+        idx += 1;
+      }
+    }
+    const oobaData = {
+      internal: pairs,
+      visible: JSON.parse(JSON.stringify(pairs))
+    };
+    if (oobaData.visible[0] && oobaData.visible[0][0] === "<|BEGIN-VISIBLE-CHAT|>") {
+      oobaData.visible[0][0] = "";
+    }
+    return JSON.stringify(oobaData, null, 2);
+  }
+  async function exportToJson(fileNameFormat) {
     if (!checkIfConversationStarted()) {
       alert(instance.t("Please start a conversation first"));
       return false;
@@ -19884,7 +21203,39 @@ ${content2.text}
       title: conversation.title,
       chatId
     });
-    const content2 = conversationToJson(options.officialFormat ? [rawConversation] : rawConversation);
+    const content2 = conversationToJson([rawConversation]);
+    downloadFile(fileName, "application/json", content2);
+    return true;
+  }
+  async function exportToTavern(fileNameFormat) {
+    if (!checkIfConversationStarted()) {
+      alert(instance.t("Please start a conversation first"));
+      return false;
+    }
+    const chatId = await getCurrentChatId();
+    const rawConversation = await fetchConversation(chatId, false);
+    const conversation = processConversation(rawConversation);
+    const fileName = getFileNameWithFormat(`${fileNameFormat}.tavern`, "jsonl", {
+      title: conversation.title,
+      chatId
+    });
+    const content2 = convertToTavern(conversation);
+    downloadFile(fileName, "application/json-lines", content2);
+    return true;
+  }
+  async function exportToOoba(fileNameFormat) {
+    if (!checkIfConversationStarted()) {
+      alert(instance.t("Please start a conversation first"));
+      return false;
+    }
+    const chatId = await getCurrentChatId();
+    const rawConversation = await fetchConversation(chatId, false);
+    const conversation = processConversation(rawConversation);
+    const fileName = getFileNameWithFormat(`${fileNameFormat}.ooba`, "json", {
+      title: conversation.title,
+      chatId
+    });
+    const content2 = convertToOoba(conversation);
     downloadFile(fileName, "application/json", content2);
     return true;
   }
@@ -20292,1227 +21643,8 @@ ${content2}`;
     return l$5.vnode && l$5.vnode(i2), i2;
   }
   const Divider = () => o$5("div", {
-    className: "border-b border-white/20"
+    className: "h-px bg-token-border-light"
   });
-  const $1746a345f3d73bb7$var$useReactId = e$2["useId".toString()] || (() => void 0);
-  let $1746a345f3d73bb7$var$count = 0;
-  function $1746a345f3d73bb7$export$f680877a34711e37(deterministicId) {
-    const [id, setId] = h$4($1746a345f3d73bb7$var$useReactId());
-    $9f79659886946c16$export$e5c5a5f917a5871c(() => {
-      if (!deterministicId)
-        setId(
-          (reactId) => reactId !== null && reactId !== void 0 ? reactId : String($1746a345f3d73bb7$var$count++)
-        );
-    }, [
-      deterministicId
-    ]);
-    return deterministicId || (id ? `radix-${id}` : "");
-  }
-  const $d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
-  const $d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
-  const $d3863c46a17e8a28$var$EVENT_OPTIONS = {
-    bubbles: false,
-    cancelable: true
-  };
-  const $d3863c46a17e8a28$export$20e40289641fbbb6 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { loop = false, trapped = false, onMountAutoFocus: onMountAutoFocusProp, onUnmountAutoFocus: onUnmountAutoFocusProp, ...scopeProps } = props;
-    const [container1, setContainer] = h$4(null);
-    const onMountAutoFocus = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onMountAutoFocusProp);
-    const onUnmountAutoFocus = $b1b2314f5f9a1d84$export$25bec8c6f54ee79a(onUnmountAutoFocusProp);
-    const lastFocusedElementRef = _$1(null);
-    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(
-      forwardedRef,
-      (node2) => setContainer(node2)
-    );
-    const focusScope = _$1({
-      paused: false,
-      pause() {
-        this.paused = true;
-      },
-      resume() {
-        this.paused = false;
-      }
-    }).current;
-    p$6(() => {
-      if (trapped) {
-        let handleFocusIn = function(event) {
-          if (focusScope.paused || !container1)
-            return;
-          const target = event.target;
-          if (container1.contains(target))
-            lastFocusedElementRef.current = target;
-          else
-            $d3863c46a17e8a28$var$focus(lastFocusedElementRef.current, {
-              select: true
-            });
-        }, handleFocusOut = function(event) {
-          if (focusScope.paused || !container1)
-            return;
-          if (!container1.contains(event.relatedTarget))
-            $d3863c46a17e8a28$var$focus(lastFocusedElementRef.current, {
-              select: true
-            });
-        };
-        document.addEventListener("focusin", handleFocusIn);
-        document.addEventListener("focusout", handleFocusOut);
-        return () => {
-          document.removeEventListener("focusin", handleFocusIn);
-          document.removeEventListener("focusout", handleFocusOut);
-        };
-      }
-    }, [
-      trapped,
-      container1,
-      focusScope.paused
-    ]);
-    p$6(() => {
-      if (container1) {
-        $d3863c46a17e8a28$var$focusScopesStack.add(focusScope);
-        const previouslyFocusedElement = document.activeElement;
-        const hasFocusedCandidate = container1.contains(previouslyFocusedElement);
-        if (!hasFocusedCandidate) {
-          const mountEvent = new CustomEvent($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, $d3863c46a17e8a28$var$EVENT_OPTIONS);
-          container1.addEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
-          container1.dispatchEvent(mountEvent);
-          if (!mountEvent.defaultPrevented) {
-            $d3863c46a17e8a28$var$focusFirst($d3863c46a17e8a28$var$removeLinks($d3863c46a17e8a28$var$getTabbableCandidates(container1)), {
-              select: true
-            });
-            if (document.activeElement === previouslyFocusedElement)
-              $d3863c46a17e8a28$var$focus(container1);
-          }
-        }
-        return () => {
-          container1.removeEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
-          setTimeout(() => {
-            const unmountEvent = new CustomEvent($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, $d3863c46a17e8a28$var$EVENT_OPTIONS);
-            container1.addEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
-            container1.dispatchEvent(unmountEvent);
-            if (!unmountEvent.defaultPrevented)
-              $d3863c46a17e8a28$var$focus(previouslyFocusedElement !== null && previouslyFocusedElement !== void 0 ? previouslyFocusedElement : document.body, {
-                select: true
-              });
-            container1.removeEventListener($d3863c46a17e8a28$var$AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
-            $d3863c46a17e8a28$var$focusScopesStack.remove(focusScope);
-          }, 0);
-        };
-      }
-    }, [
-      container1,
-      onMountAutoFocus,
-      onUnmountAutoFocus,
-      focusScope
-    ]);
-    const handleKeyDown = T$4((event) => {
-      if (!loop && !trapped)
-        return;
-      if (focusScope.paused)
-        return;
-      const isTabKey = event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey;
-      const focusedElement = document.activeElement;
-      if (isTabKey && focusedElement) {
-        const container = event.currentTarget;
-        const [first, last] = $d3863c46a17e8a28$var$getTabbableEdges(container);
-        const hasTabbableElementsInside = first && last;
-        if (!hasTabbableElementsInside) {
-          if (focusedElement === container)
-            event.preventDefault();
-        } else {
-          if (!event.shiftKey && focusedElement === last) {
-            event.preventDefault();
-            if (loop)
-              $d3863c46a17e8a28$var$focus(first, {
-                select: true
-              });
-          } else if (event.shiftKey && focusedElement === first) {
-            event.preventDefault();
-            if (loop)
-              $d3863c46a17e8a28$var$focus(last, {
-                select: true
-              });
-          }
-        }
-      }
-    }, [
-      loop,
-      trapped,
-      focusScope.paused
-    ]);
-    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({
-      tabIndex: -1
-    }, scopeProps, {
-      ref: composedRefs,
-      onKeyDown: handleKeyDown
-    }));
-  });
-  function $d3863c46a17e8a28$var$focusFirst(candidates, { select = false } = {}) {
-    const previouslyFocusedElement = document.activeElement;
-    for (const candidate of candidates) {
-      $d3863c46a17e8a28$var$focus(candidate, {
-        select
-      });
-      if (document.activeElement !== previouslyFocusedElement)
-        return;
-    }
-  }
-  function $d3863c46a17e8a28$var$getTabbableEdges(container) {
-    const candidates = $d3863c46a17e8a28$var$getTabbableCandidates(container);
-    const first = $d3863c46a17e8a28$var$findVisible(candidates, container);
-    const last = $d3863c46a17e8a28$var$findVisible(candidates.reverse(), container);
-    return [
-      first,
-      last
-    ];
-  }
-  function $d3863c46a17e8a28$var$getTabbableCandidates(container) {
-    const nodes = [];
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
-      acceptNode: (node2) => {
-        const isHiddenInput = node2.tagName === "INPUT" && node2.type === "hidden";
-        if (node2.disabled || node2.hidden || isHiddenInput)
-          return NodeFilter.FILTER_SKIP;
-        return node2.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-      }
-    });
-    while (walker.nextNode())
-      nodes.push(walker.currentNode);
-    return nodes;
-  }
-  function $d3863c46a17e8a28$var$findVisible(elements, container) {
-    for (const element2 of elements) {
-      if (!$d3863c46a17e8a28$var$isHidden(element2, {
-        upTo: container
-      }))
-        return element2;
-    }
-  }
-  function $d3863c46a17e8a28$var$isHidden(node2, { upTo }) {
-    if (getComputedStyle(node2).visibility === "hidden")
-      return true;
-    while (node2) {
-      if (upTo !== void 0 && node2 === upTo)
-        return false;
-      if (getComputedStyle(node2).display === "none")
-        return true;
-      node2 = node2.parentElement;
-    }
-    return false;
-  }
-  function $d3863c46a17e8a28$var$isSelectableInput(element2) {
-    return element2 instanceof HTMLInputElement && "select" in element2;
-  }
-  function $d3863c46a17e8a28$var$focus(element2, { select = false } = {}) {
-    if (element2 && element2.focus) {
-      const previouslyFocusedElement = document.activeElement;
-      element2.focus({
-        preventScroll: true
-      });
-      if (element2 !== previouslyFocusedElement && $d3863c46a17e8a28$var$isSelectableInput(element2) && select)
-        element2.select();
-    }
-  }
-  const $d3863c46a17e8a28$var$focusScopesStack = $d3863c46a17e8a28$var$createFocusScopesStack();
-  function $d3863c46a17e8a28$var$createFocusScopesStack() {
-    let stack = [];
-    return {
-      add(focusScope) {
-        const activeFocusScope = stack[0];
-        if (focusScope !== activeFocusScope)
-          activeFocusScope === null || activeFocusScope === void 0 || activeFocusScope.pause();
-        stack = $d3863c46a17e8a28$var$arrayRemove(stack, focusScope);
-        stack.unshift(focusScope);
-      },
-      remove(focusScope) {
-        var _stack$;
-        stack = $d3863c46a17e8a28$var$arrayRemove(stack, focusScope);
-        (_stack$ = stack[0]) === null || _stack$ === void 0 || _stack$.resume();
-      }
-    };
-  }
-  function $d3863c46a17e8a28$var$arrayRemove(array, item) {
-    const updatedArray = [
-      ...array
-    ];
-    const index2 = updatedArray.indexOf(item);
-    if (index2 !== -1)
-      updatedArray.splice(index2, 1);
-    return updatedArray;
-  }
-  function $d3863c46a17e8a28$var$removeLinks(items) {
-    return items.filter(
-      (item) => item.tagName !== "A"
-    );
-  }
-  let $3db38b7d1fb3fe6a$var$count = 0;
-  function $3db38b7d1fb3fe6a$export$b7ece24a22aeda8c() {
-    p$6(() => {
-      var _edgeGuards$, _edgeGuards$2;
-      const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
-      document.body.insertAdjacentElement("afterbegin", (_edgeGuards$ = edgeGuards[0]) !== null && _edgeGuards$ !== void 0 ? _edgeGuards$ : $3db38b7d1fb3fe6a$var$createFocusGuard());
-      document.body.insertAdjacentElement("beforeend", (_edgeGuards$2 = edgeGuards[1]) !== null && _edgeGuards$2 !== void 0 ? _edgeGuards$2 : $3db38b7d1fb3fe6a$var$createFocusGuard());
-      $3db38b7d1fb3fe6a$var$count++;
-      return () => {
-        if ($3db38b7d1fb3fe6a$var$count === 1)
-          document.querySelectorAll("[data-radix-focus-guard]").forEach(
-            (node2) => node2.remove()
-          );
-        $3db38b7d1fb3fe6a$var$count--;
-      };
-    }, []);
-  }
-  function $3db38b7d1fb3fe6a$var$createFocusGuard() {
-    const element2 = document.createElement("span");
-    element2.setAttribute("data-radix-focus-guard", "");
-    element2.tabIndex = 0;
-    element2.style.cssText = "outline: none; opacity: 0; position: fixed; pointer-events: none";
-    return element2;
-  }
-  var __assign = function() {
-    __assign = Object.assign || function __assign2(t2) {
-      for (var s2, i2 = 1, n2 = arguments.length; i2 < n2; i2++) {
-        s2 = arguments[i2];
-        for (var p2 in s2)
-          if (Object.prototype.hasOwnProperty.call(s2, p2))
-            t2[p2] = s2[p2];
-      }
-      return t2;
-    };
-    return __assign.apply(this, arguments);
-  };
-  function __rest(s2, e2) {
-    var t2 = {};
-    for (var p2 in s2)
-      if (Object.prototype.hasOwnProperty.call(s2, p2) && e2.indexOf(p2) < 0)
-        t2[p2] = s2[p2];
-    if (s2 != null && typeof Object.getOwnPropertySymbols === "function")
-      for (var i2 = 0, p2 = Object.getOwnPropertySymbols(s2); i2 < p2.length; i2++) {
-        if (e2.indexOf(p2[i2]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i2]))
-          t2[p2[i2]] = s2[p2[i2]];
-      }
-    return t2;
-  }
-  function __spreadArray(to, from, pack) {
-    if (pack || arguments.length === 2)
-      for (var i2 = 0, l2 = from.length, ar; i2 < l2; i2++) {
-        if (ar || !(i2 in from)) {
-          if (!ar)
-            ar = Array.prototype.slice.call(from, 0, i2);
-          ar[i2] = from[i2];
-        }
-      }
-    return to.concat(ar || Array.prototype.slice.call(from));
-  }
-  var zeroRightClassName = "right-scroll-bar-position";
-  var fullWidthClassName = "width-before-scroll-bar";
-  var noScrollbarsClassName = "with-scroll-bars-hidden";
-  var removedBarSizeVariable = "--removed-body-scroll-bar-size";
-  function assignRef(ref, value) {
-    if (typeof ref === "function") {
-      ref(value);
-    } else if (ref) {
-      ref.current = value;
-    }
-    return ref;
-  }
-  function useCallbackRef(initialValue, callback) {
-    var ref = h$4(function() {
-      return {
-        // value
-        value: initialValue,
-        // last callback
-        callback,
-        // "memoized" public interface
-        facade: {
-          get current() {
-            return ref.value;
-          },
-          set current(value) {
-            var last = ref.value;
-            if (last !== value) {
-              ref.value = value;
-              ref.callback(value, last);
-            }
-          }
-        }
-      };
-    })[0];
-    ref.callback = callback;
-    return ref.facade;
-  }
-  function useMergeRefs(refs, defaultValue) {
-    return useCallbackRef(defaultValue || null, function(newValue) {
-      return refs.forEach(function(ref) {
-        return assignRef(ref, newValue);
-      });
-    });
-  }
-  function ItoI(a2) {
-    return a2;
-  }
-  function innerCreateMedium(defaults, middleware) {
-    if (middleware === void 0) {
-      middleware = ItoI;
-    }
-    var buffer = [];
-    var assigned = false;
-    var medium = {
-      read: function() {
-        if (assigned) {
-          throw new Error("Sidecar: could not `read` from an `assigned` medium. `read` could be used only with `useMedium`.");
-        }
-        if (buffer.length) {
-          return buffer[buffer.length - 1];
-        }
-        return defaults;
-      },
-      useMedium: function(data) {
-        var item = middleware(data, assigned);
-        buffer.push(item);
-        return function() {
-          buffer = buffer.filter(function(x2) {
-            return x2 !== item;
-          });
-        };
-      },
-      assignSyncMedium: function(cb) {
-        assigned = true;
-        while (buffer.length) {
-          var cbs = buffer;
-          buffer = [];
-          cbs.forEach(cb);
-        }
-        buffer = {
-          push: function(x2) {
-            return cb(x2);
-          },
-          filter: function() {
-            return buffer;
-          }
-        };
-      },
-      assignMedium: function(cb) {
-        assigned = true;
-        var pendingQueue = [];
-        if (buffer.length) {
-          var cbs = buffer;
-          buffer = [];
-          cbs.forEach(cb);
-          pendingQueue = buffer;
-        }
-        var executeQueue = function() {
-          var cbs2 = pendingQueue;
-          pendingQueue = [];
-          cbs2.forEach(cb);
-        };
-        var cycle = function() {
-          return Promise.resolve().then(executeQueue);
-        };
-        cycle();
-        buffer = {
-          push: function(x2) {
-            pendingQueue.push(x2);
-            cycle();
-          },
-          filter: function(filter) {
-            pendingQueue = pendingQueue.filter(filter);
-            return buffer;
-          }
-        };
-      }
-    };
-    return medium;
-  }
-  function createSidecarMedium(options) {
-    if (options === void 0) {
-      options = {};
-    }
-    var medium = innerCreateMedium(null);
-    medium.options = __assign({ async: true, ssr: false }, options);
-    return medium;
-  }
-  var SideCar$1 = function(_a) {
-    var sideCar = _a.sideCar, rest = __rest(_a, ["sideCar"]);
-    if (!sideCar) {
-      throw new Error("Sidecar: please provide `sideCar` property to import the right car");
-    }
-    var Target = sideCar.read();
-    if (!Target) {
-      throw new Error("Sidecar medium not found");
-    }
-    return y$6(Target, __assign({}, rest));
-  };
-  SideCar$1.isSideCarExport = true;
-  function exportSidecar(medium, exported) {
-    medium.useMedium(exported);
-    return SideCar$1;
-  }
-  var effectCar = createSidecarMedium();
-  var nothing = function() {
-    return;
-  };
-  var RemoveScroll = k$1(function(props, parentRef) {
-    var ref = _$1(null);
-    var _a = h$4({
-      onScrollCapture: nothing,
-      onWheelCapture: nothing,
-      onTouchMoveCapture: nothing
-    }), callbacks = _a[0], setCallbacks = _a[1];
-    var forwardProps = props.forwardProps, children = props.children, className = props.className, removeScrollBar = props.removeScrollBar, enabled = props.enabled, shards = props.shards, sideCar = props.sideCar, noIsolation = props.noIsolation, inert = props.inert, allowPinchZoom = props.allowPinchZoom, _b = props.as, Container = _b === void 0 ? "div" : _b, rest = __rest(props, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noIsolation", "inert", "allowPinchZoom", "as"]);
-    var SideCar2 = sideCar;
-    var containerRef = useMergeRefs([ref, parentRef]);
-    var containerProps = __assign(__assign({}, rest), callbacks);
-    return y$6(
-      k$3,
-      null,
-      enabled && y$6(SideCar2, { sideCar: effectCar, removeScrollBar, shards, noIsolation, inert, setCallbacks, allowPinchZoom: !!allowPinchZoom, lockRef: ref }),
-      forwardProps ? hn(O$1.only(children), __assign(__assign({}, containerProps), { ref: containerRef })) : y$6(Container, __assign({}, containerProps, { className, ref: containerRef }), children)
-    );
-  });
-  RemoveScroll.defaultProps = {
-    enabled: true,
-    removeScrollBar: true,
-    inert: false
-  };
-  RemoveScroll.classNames = {
-    fullWidth: fullWidthClassName,
-    zeroRight: zeroRightClassName
-  };
-  var getNonce = function() {
-    if (typeof __webpack_nonce__ !== "undefined") {
-      return __webpack_nonce__;
-    }
-    return void 0;
-  };
-  function makeStyleTag() {
-    if (!document)
-      return null;
-    var tag = document.createElement("style");
-    tag.type = "text/css";
-    var nonce = getNonce();
-    if (nonce) {
-      tag.setAttribute("nonce", nonce);
-    }
-    return tag;
-  }
-  function injectStyles(tag, css) {
-    if (tag.styleSheet) {
-      tag.styleSheet.cssText = css;
-    } else {
-      tag.appendChild(document.createTextNode(css));
-    }
-  }
-  function insertStyleTag(tag) {
-    var head2 = document.head || document.getElementsByTagName("head")[0];
-    head2.appendChild(tag);
-  }
-  var stylesheetSingleton = function() {
-    var counter = 0;
-    var stylesheet = null;
-    return {
-      add: function(style2) {
-        if (counter == 0) {
-          if (stylesheet = makeStyleTag()) {
-            injectStyles(stylesheet, style2);
-            insertStyleTag(stylesheet);
-          }
-        }
-        counter++;
-      },
-      remove: function() {
-        counter--;
-        if (!counter && stylesheet) {
-          stylesheet.parentNode && stylesheet.parentNode.removeChild(stylesheet);
-          stylesheet = null;
-        }
-      }
-    };
-  };
-  var styleHookSingleton = function() {
-    var sheet = stylesheetSingleton();
-    return function(styles, isDynamic) {
-      p$6(function() {
-        sheet.add(styles);
-        return function() {
-          sheet.remove();
-        };
-      }, [styles && isDynamic]);
-    };
-  };
-  var styleSingleton = function() {
-    var useStyle = styleHookSingleton();
-    var Sheet = function(_a) {
-      var styles = _a.styles, dynamic = _a.dynamic;
-      useStyle(styles, dynamic);
-      return null;
-    };
-    return Sheet;
-  };
-  var zeroGap = {
-    left: 0,
-    top: 0,
-    right: 0,
-    gap: 0
-  };
-  var parse = function(x2) {
-    return parseInt(x2 || "", 10) || 0;
-  };
-  var getOffset = function(gapMode) {
-    var cs = window.getComputedStyle(document.body);
-    var left = cs[gapMode === "padding" ? "paddingLeft" : "marginLeft"];
-    var top = cs[gapMode === "padding" ? "paddingTop" : "marginTop"];
-    var right = cs[gapMode === "padding" ? "paddingRight" : "marginRight"];
-    return [parse(left), parse(top), parse(right)];
-  };
-  var getGapWidth = function(gapMode) {
-    if (gapMode === void 0) {
-      gapMode = "margin";
-    }
-    if (typeof window === "undefined") {
-      return zeroGap;
-    }
-    var offsets = getOffset(gapMode);
-    var documentWidth = document.documentElement.clientWidth;
-    var windowWidth = window.innerWidth;
-    return {
-      left: offsets[0],
-      top: offsets[1],
-      right: offsets[2],
-      gap: Math.max(0, windowWidth - documentWidth + offsets[2] - offsets[0])
-    };
-  };
-  var Style = styleSingleton();
-  var getStyles = function(_a, allowRelative, gapMode, important) {
-    var left = _a.left, top = _a.top, right = _a.right, gap = _a.gap;
-    if (gapMode === void 0) {
-      gapMode = "margin";
-    }
-    return "\n  .".concat(noScrollbarsClassName, " {\n   overflow: hidden ").concat(important, ";\n   padding-right: ").concat(gap, "px ").concat(important, ";\n  }\n  body {\n    overflow: hidden ").concat(important, ";\n    overscroll-behavior: contain;\n    ").concat([
-      allowRelative && "position: relative ".concat(important, ";"),
-      gapMode === "margin" && "\n    padding-left: ".concat(left, "px;\n    padding-top: ").concat(top, "px;\n    padding-right: ").concat(right, "px;\n    margin-left:0;\n    margin-top:0;\n    margin-right: ").concat(gap, "px ").concat(important, ";\n    "),
-      gapMode === "padding" && "padding-right: ".concat(gap, "px ").concat(important, ";")
-    ].filter(Boolean).join(""), "\n  }\n  \n  .").concat(zeroRightClassName, " {\n    right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " {\n    margin-right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(zeroRightClassName, " .").concat(zeroRightClassName, " {\n    right: 0 ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " .").concat(fullWidthClassName, " {\n    margin-right: 0 ").concat(important, ";\n  }\n  \n  body {\n    ").concat(removedBarSizeVariable, ": ").concat(gap, "px;\n  }\n");
-  };
-  var RemoveScrollBar = function(props) {
-    var noRelative = props.noRelative, noImportant = props.noImportant, _a = props.gapMode, gapMode = _a === void 0 ? "margin" : _a;
-    var gap = F$1(function() {
-      return getGapWidth(gapMode);
-    }, [gapMode]);
-    return y$6(Style, { styles: getStyles(gap, !noRelative, gapMode, !noImportant ? "!important" : "") });
-  };
-  var passiveSupported = false;
-  if (typeof window !== "undefined") {
-    try {
-      var options = Object.defineProperty({}, "passive", {
-        get: function() {
-          passiveSupported = true;
-          return true;
-        }
-      });
-      window.addEventListener("test", options, options);
-      window.removeEventListener("test", options, options);
-    } catch (err) {
-      passiveSupported = false;
-    }
-  }
-  var nonPassive = passiveSupported ? { passive: false } : false;
-  var alwaysContainsScroll = function(node2) {
-    return node2.tagName === "TEXTAREA";
-  };
-  var elementCanBeScrolled = function(node2, overflow) {
-    var styles = window.getComputedStyle(node2);
-    return (
-      // not-not-scrollable
-      styles[overflow] !== "hidden" && // contains scroll inside self
-      !(styles.overflowY === styles.overflowX && !alwaysContainsScroll(node2) && styles[overflow] === "visible")
-    );
-  };
-  var elementCouldBeVScrolled = function(node2) {
-    return elementCanBeScrolled(node2, "overflowY");
-  };
-  var elementCouldBeHScrolled = function(node2) {
-    return elementCanBeScrolled(node2, "overflowX");
-  };
-  var locationCouldBeScrolled = function(axis, node2) {
-    var current = node2;
-    do {
-      if (typeof ShadowRoot !== "undefined" && current instanceof ShadowRoot) {
-        current = current.host;
-      }
-      var isScrollable = elementCouldBeScrolled(axis, current);
-      if (isScrollable) {
-        var _a = getScrollVariables(axis, current), s2 = _a[1], d2 = _a[2];
-        if (s2 > d2) {
-          return true;
-        }
-      }
-      current = current.parentNode;
-    } while (current && current !== document.body);
-    return false;
-  };
-  var getVScrollVariables = function(_a) {
-    var scrollTop = _a.scrollTop, scrollHeight = _a.scrollHeight, clientHeight = _a.clientHeight;
-    return [
-      scrollTop,
-      scrollHeight,
-      clientHeight
-    ];
-  };
-  var getHScrollVariables = function(_a) {
-    var scrollLeft = _a.scrollLeft, scrollWidth = _a.scrollWidth, clientWidth = _a.clientWidth;
-    return [
-      scrollLeft,
-      scrollWidth,
-      clientWidth
-    ];
-  };
-  var elementCouldBeScrolled = function(axis, node2) {
-    return axis === "v" ? elementCouldBeVScrolled(node2) : elementCouldBeHScrolled(node2);
-  };
-  var getScrollVariables = function(axis, node2) {
-    return axis === "v" ? getVScrollVariables(node2) : getHScrollVariables(node2);
-  };
-  var getDirectionFactor = function(axis, direction) {
-    return axis === "h" && direction === "rtl" ? -1 : 1;
-  };
-  var handleScroll = function(axis, endTarget, event, sourceDelta, noOverscroll) {
-    var directionFactor = getDirectionFactor(axis, window.getComputedStyle(endTarget).direction);
-    var delta = directionFactor * sourceDelta;
-    var target = event.target;
-    var targetInLock = endTarget.contains(target);
-    var shouldCancelScroll = false;
-    var isDeltaPositive = delta > 0;
-    var availableScroll = 0;
-    var availableScrollTop = 0;
-    do {
-      var _a = getScrollVariables(axis, target), position2 = _a[0], scroll_1 = _a[1], capacity = _a[2];
-      var elementScroll = scroll_1 - capacity - directionFactor * position2;
-      if (position2 || elementScroll) {
-        if (elementCouldBeScrolled(axis, target)) {
-          availableScroll += elementScroll;
-          availableScrollTop += position2;
-        }
-      }
-      target = target.parentNode;
-    } while (
-      // portaled content
-      !targetInLock && target !== document.body || // self content
-      targetInLock && (endTarget.contains(target) || endTarget === target)
-    );
-    if (isDeltaPositive && (noOverscroll && availableScroll === 0 || !noOverscroll && delta > availableScroll)) {
-      shouldCancelScroll = true;
-    } else if (!isDeltaPositive && (noOverscroll && availableScrollTop === 0 || !noOverscroll && -delta > availableScrollTop)) {
-      shouldCancelScroll = true;
-    }
-    return shouldCancelScroll;
-  };
-  var getTouchXY = function(event) {
-    return "changedTouches" in event ? [event.changedTouches[0].clientX, event.changedTouches[0].clientY] : [0, 0];
-  };
-  var getDeltaXY = function(event) {
-    return [event.deltaX, event.deltaY];
-  };
-  var extractRef = function(ref) {
-    return ref && "current" in ref ? ref.current : ref;
-  };
-  var deltaCompare = function(x2, y2) {
-    return x2[0] === y2[0] && x2[1] === y2[1];
-  };
-  var generateStyle = function(id) {
-    return "\n  .block-interactivity-".concat(id, " {pointer-events: none;}\n  .allow-interactivity-").concat(id, " {pointer-events: all;}\n");
-  };
-  var idCounter = 0;
-  var lockStack = [];
-  function RemoveScrollSideCar(props) {
-    var shouldPreventQueue = _$1([]);
-    var touchStartRef = _$1([0, 0]);
-    var activeAxis = _$1();
-    var id = h$4(idCounter++)[0];
-    var Style2 = h$4(function() {
-      return styleSingleton();
-    })[0];
-    var lastProps = _$1(props);
-    p$6(function() {
-      lastProps.current = props;
-    }, [props]);
-    p$6(function() {
-      if (props.inert) {
-        document.body.classList.add("block-interactivity-".concat(id));
-        var allow_1 = __spreadArray([props.lockRef.current], (props.shards || []).map(extractRef), true).filter(Boolean);
-        allow_1.forEach(function(el) {
-          return el.classList.add("allow-interactivity-".concat(id));
-        });
-        return function() {
-          document.body.classList.remove("block-interactivity-".concat(id));
-          allow_1.forEach(function(el) {
-            return el.classList.remove("allow-interactivity-".concat(id));
-          });
-        };
-      }
-      return;
-    }, [props.inert, props.lockRef.current, props.shards]);
-    var shouldCancelEvent = T$4(function(event, parent) {
-      if ("touches" in event && event.touches.length === 2) {
-        return !lastProps.current.allowPinchZoom;
-      }
-      var touch = getTouchXY(event);
-      var touchStart = touchStartRef.current;
-      var deltaX = "deltaX" in event ? event.deltaX : touchStart[0] - touch[0];
-      var deltaY = "deltaY" in event ? event.deltaY : touchStart[1] - touch[1];
-      var currentAxis;
-      var target = event.target;
-      var moveDirection = Math.abs(deltaX) > Math.abs(deltaY) ? "h" : "v";
-      if ("touches" in event && moveDirection === "h" && target.type === "range") {
-        return false;
-      }
-      var canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
-      if (!canBeScrolledInMainDirection) {
-        return true;
-      }
-      if (canBeScrolledInMainDirection) {
-        currentAxis = moveDirection;
-      } else {
-        currentAxis = moveDirection === "v" ? "h" : "v";
-        canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
-      }
-      if (!canBeScrolledInMainDirection) {
-        return false;
-      }
-      if (!activeAxis.current && "changedTouches" in event && (deltaX || deltaY)) {
-        activeAxis.current = currentAxis;
-      }
-      if (!currentAxis) {
-        return true;
-      }
-      var cancelingAxis = activeAxis.current || currentAxis;
-      return handleScroll(cancelingAxis, parent, event, cancelingAxis === "h" ? deltaX : deltaY, true);
-    }, []);
-    var shouldPrevent = T$4(function(_event) {
-      var event = _event;
-      if (!lockStack.length || lockStack[lockStack.length - 1] !== Style2) {
-        return;
-      }
-      var delta = "deltaY" in event ? getDeltaXY(event) : getTouchXY(event);
-      var sourceEvent = shouldPreventQueue.current.filter(function(e2) {
-        return e2.name === event.type && e2.target === event.target && deltaCompare(e2.delta, delta);
-      })[0];
-      if (sourceEvent && sourceEvent.should) {
-        if (event.cancelable) {
-          event.preventDefault();
-        }
-        return;
-      }
-      if (!sourceEvent) {
-        var shardNodes = (lastProps.current.shards || []).map(extractRef).filter(Boolean).filter(function(node2) {
-          return node2.contains(event.target);
-        });
-        var shouldStop = shardNodes.length > 0 ? shouldCancelEvent(event, shardNodes[0]) : !lastProps.current.noIsolation;
-        if (shouldStop) {
-          if (event.cancelable) {
-            event.preventDefault();
-          }
-        }
-      }
-    }, []);
-    var shouldCancel = T$4(function(name, delta, target, should) {
-      var event = { name, delta, target, should };
-      shouldPreventQueue.current.push(event);
-      setTimeout(function() {
-        shouldPreventQueue.current = shouldPreventQueue.current.filter(function(e2) {
-          return e2 !== event;
-        });
-      }, 1);
-    }, []);
-    var scrollTouchStart = T$4(function(event) {
-      touchStartRef.current = getTouchXY(event);
-      activeAxis.current = void 0;
-    }, []);
-    var scrollWheel = T$4(function(event) {
-      shouldCancel(event.type, getDeltaXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
-    }, []);
-    var scrollTouchMove = T$4(function(event) {
-      shouldCancel(event.type, getTouchXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
-    }, []);
-    p$6(function() {
-      lockStack.push(Style2);
-      props.setCallbacks({
-        onScrollCapture: scrollWheel,
-        onWheelCapture: scrollWheel,
-        onTouchMoveCapture: scrollTouchMove
-      });
-      document.addEventListener("wheel", shouldPrevent, nonPassive);
-      document.addEventListener("touchmove", shouldPrevent, nonPassive);
-      document.addEventListener("touchstart", scrollTouchStart, nonPassive);
-      return function() {
-        lockStack = lockStack.filter(function(inst) {
-          return inst !== Style2;
-        });
-        document.removeEventListener("wheel", shouldPrevent, nonPassive);
-        document.removeEventListener("touchmove", shouldPrevent, nonPassive);
-        document.removeEventListener("touchstart", scrollTouchStart, nonPassive);
-      };
-    }, []);
-    var removeScrollBar = props.removeScrollBar, inert = props.inert;
-    return y$6(
-      k$3,
-      null,
-      inert ? y$6(Style2, { styles: generateStyle(id) }) : null,
-      removeScrollBar ? y$6(RemoveScrollBar, { gapMode: "margin" }) : null
-    );
-  }
-  const SideCar = exportSidecar(effectCar, RemoveScrollSideCar);
-  var ReactRemoveScroll = k$1(function(props, ref) {
-    return y$6(RemoveScroll, __assign({}, props, { ref, sideCar: SideCar }));
-  });
-  ReactRemoveScroll.classNames = RemoveScroll.classNames;
-  const $67UHm$RemoveScroll = ReactRemoveScroll;
-  var getDefaultParent = function(originalTarget) {
-    if (typeof document === "undefined") {
-      return null;
-    }
-    var sampleTarget = Array.isArray(originalTarget) ? originalTarget[0] : originalTarget;
-    return sampleTarget.ownerDocument.body;
-  };
-  var counterMap = /* @__PURE__ */ new WeakMap();
-  var uncontrolledNodes = /* @__PURE__ */ new WeakMap();
-  var markerMap = {};
-  var lockCount = 0;
-  var unwrapHost = function(node2) {
-    return node2 && (node2.host || unwrapHost(node2.parentNode));
-  };
-  var correctTargets = function(parent, targets) {
-    return targets.map(function(target) {
-      if (parent.contains(target)) {
-        return target;
-      }
-      var correctedTarget = unwrapHost(target);
-      if (correctedTarget && parent.contains(correctedTarget)) {
-        return correctedTarget;
-      }
-      console.error("aria-hidden", target, "in not contained inside", parent, ". Doing nothing");
-      return null;
-    }).filter(function(x2) {
-      return Boolean(x2);
-    });
-  };
-  var applyAttributeToOthers = function(originalTarget, parentNode, markerName, controlAttribute) {
-    var targets = correctTargets(parentNode, Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
-    if (!markerMap[markerName]) {
-      markerMap[markerName] = /* @__PURE__ */ new WeakMap();
-    }
-    var markerCounter = markerMap[markerName];
-    var hiddenNodes = [];
-    var elementsToKeep = /* @__PURE__ */ new Set();
-    var elementsToStop = new Set(targets);
-    var keep = function(el) {
-      if (!el || elementsToKeep.has(el)) {
-        return;
-      }
-      elementsToKeep.add(el);
-      keep(el.parentNode);
-    };
-    targets.forEach(keep);
-    var deep = function(parent) {
-      if (!parent || elementsToStop.has(parent)) {
-        return;
-      }
-      Array.prototype.forEach.call(parent.children, function(node2) {
-        if (elementsToKeep.has(node2)) {
-          deep(node2);
-        } else {
-          var attr = node2.getAttribute(controlAttribute);
-          var alreadyHidden = attr !== null && attr !== "false";
-          var counterValue = (counterMap.get(node2) || 0) + 1;
-          var markerValue = (markerCounter.get(node2) || 0) + 1;
-          counterMap.set(node2, counterValue);
-          markerCounter.set(node2, markerValue);
-          hiddenNodes.push(node2);
-          if (counterValue === 1 && alreadyHidden) {
-            uncontrolledNodes.set(node2, true);
-          }
-          if (markerValue === 1) {
-            node2.setAttribute(markerName, "true");
-          }
-          if (!alreadyHidden) {
-            node2.setAttribute(controlAttribute, "true");
-          }
-        }
-      });
-    };
-    deep(parentNode);
-    elementsToKeep.clear();
-    lockCount++;
-    return function() {
-      hiddenNodes.forEach(function(node2) {
-        var counterValue = counterMap.get(node2) - 1;
-        var markerValue = markerCounter.get(node2) - 1;
-        counterMap.set(node2, counterValue);
-        markerCounter.set(node2, markerValue);
-        if (!counterValue) {
-          if (!uncontrolledNodes.has(node2)) {
-            node2.removeAttribute(controlAttribute);
-          }
-          uncontrolledNodes.delete(node2);
-        }
-        if (!markerValue) {
-          node2.removeAttribute(markerName);
-        }
-      });
-      lockCount--;
-      if (!lockCount) {
-        counterMap = /* @__PURE__ */ new WeakMap();
-        counterMap = /* @__PURE__ */ new WeakMap();
-        uncontrolledNodes = /* @__PURE__ */ new WeakMap();
-        markerMap = {};
-      }
-    };
-  };
-  var hideOthers = function(originalTarget, parentNode, markerName) {
-    if (markerName === void 0) {
-      markerName = "data-aria-hidden";
-    }
-    var targets = Array.from(Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
-    var activeParentNode = parentNode || getDefaultParent(originalTarget);
-    if (!activeParentNode) {
-      return function() {
-        return null;
-      };
-    }
-    targets.push.apply(targets, Array.from(activeParentNode.querySelectorAll("[aria-live]")));
-    return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
-  };
-  const $5d3850c4d0b4e6c7$var$DIALOG_NAME = "Dialog";
-  const [$5d3850c4d0b4e6c7$var$createDialogContext, $5d3850c4d0b4e6c7$export$cc702773b8ea3e41] = $c512c27ab02ef895$export$50c7b4e9d9f19c1($5d3850c4d0b4e6c7$var$DIALOG_NAME);
-  const [$5d3850c4d0b4e6c7$var$DialogProvider, $5d3850c4d0b4e6c7$var$useDialogContext] = $5d3850c4d0b4e6c7$var$createDialogContext($5d3850c4d0b4e6c7$var$DIALOG_NAME);
-  const $5d3850c4d0b4e6c7$export$3ddf2d174ce01153 = (props) => {
-    const { __scopeDialog, children, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
-    const triggerRef = _$1(null);
-    const contentRef = _$1(null);
-    const [open = false, setOpen] = $71cd76cc60e0454e$export$6f32135080cb4c3({
-      prop: openProp,
-      defaultProp: defaultOpen,
-      onChange: onOpenChange
-    });
-    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogProvider, {
-      scope: __scopeDialog,
-      triggerRef,
-      contentRef,
-      contentId: $1746a345f3d73bb7$export$f680877a34711e37(),
-      titleId: $1746a345f3d73bb7$export$f680877a34711e37(),
-      descriptionId: $1746a345f3d73bb7$export$f680877a34711e37(),
-      open,
-      onOpenChange: setOpen,
-      onOpenToggle: T$4(
-        () => setOpen(
-          (prevOpen) => !prevOpen
-        ),
-        [
-          setOpen
-        ]
-      ),
-      modal
-    }, children);
-  };
-  const $5d3850c4d0b4e6c7$var$TRIGGER_NAME = "DialogTrigger";
-  const $5d3850c4d0b4e6c7$export$2e1e1122cf0cba88 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { __scopeDialog, ...triggerProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$TRIGGER_NAME, __scopeDialog);
-    const composedTriggerRef = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, context.triggerRef);
-    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.button, _extends({
-      type: "button",
-      "aria-haspopup": "dialog",
-      "aria-expanded": context.open,
-      "aria-controls": context.contentId,
-      "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
-    }, triggerProps, {
-      ref: composedTriggerRef,
-      onClick: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onClick, context.onOpenToggle)
-    }));
-  });
-  const $5d3850c4d0b4e6c7$var$PORTAL_NAME = "DialogPortal";
-  const [$5d3850c4d0b4e6c7$var$PortalProvider, $5d3850c4d0b4e6c7$var$usePortalContext] = $5d3850c4d0b4e6c7$var$createDialogContext($5d3850c4d0b4e6c7$var$PORTAL_NAME, {
-    forceMount: void 0
-  });
-  const $5d3850c4d0b4e6c7$export$dad7c95542bacce0 = (props) => {
-    const { __scopeDialog, forceMount, children, container } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$PORTAL_NAME, __scopeDialog);
-    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$PortalProvider, {
-      scope: __scopeDialog,
-      forceMount
-    }, O$1.map(
-      children,
-      (child) => /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
-        present: forceMount || context.open
-      }, /* @__PURE__ */ y$6($f1701beae083dbae$export$602eac185826482c, {
-        asChild: true,
-        container
-      }, child))
-    ));
-  };
-  const $5d3850c4d0b4e6c7$var$OVERLAY_NAME = "DialogOverlay";
-  const $5d3850c4d0b4e6c7$export$bd1d06c79be19e17 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const portalContext = $5d3850c4d0b4e6c7$var$usePortalContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, props.__scopeDialog);
-    const { forceMount = portalContext.forceMount, ...overlayProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, props.__scopeDialog);
-    return context.modal ? /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
-      present: forceMount || context.open
-    }, /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogOverlayImpl, _extends({}, overlayProps, {
-      ref: forwardedRef
-    }))) : null;
-  });
-  const $5d3850c4d0b4e6c7$var$DialogOverlayImpl = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { __scopeDialog, ...overlayProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$OVERLAY_NAME, __scopeDialog);
-    return (
-      // Make sure `Content` is scrollable even when it doesn't live inside `RemoveScroll`
-      // ie. when `Overlay` and `Content` are siblings
-      /* @__PURE__ */ y$6($67UHm$RemoveScroll, {
-        as: $5e63c961fc1ce211$export$8c6ed5c666ac1360,
-        allowPinchZoom: true,
-        shards: [
-          context.contentRef
-        ]
-      }, /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.div, _extends({
-        "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
-      }, overlayProps, {
-        ref: forwardedRef,
-        style: {
-          pointerEvents: "auto",
-          ...overlayProps.style
-        }
-      })))
-    );
-  });
-  const $5d3850c4d0b4e6c7$var$CONTENT_NAME = "DialogContent";
-  const $5d3850c4d0b4e6c7$export$b6d9565de1e068cf = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const portalContext = $5d3850c4d0b4e6c7$var$usePortalContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
-    const { forceMount = portalContext.forceMount, ...contentProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
-    return /* @__PURE__ */ y$6($921a889cee6df7e8$export$99c2b779aa4e8b8b, {
-      present: forceMount || context.open
-    }, context.modal ? /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentModal, _extends({}, contentProps, {
-      ref: forwardedRef
-    })) : /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentNonModal, _extends({}, contentProps, {
-      ref: forwardedRef
-    })));
-  });
-  const $5d3850c4d0b4e6c7$var$DialogContentModal = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
-    const contentRef = _$1(null);
-    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, context.contentRef, contentRef);
-    p$6(() => {
-      const content2 = contentRef.current;
-      if (content2)
-        return hideOthers(content2);
-    }, []);
-    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentImpl, _extends({}, props, {
-      ref: composedRefs,
-      trapFocus: context.open,
-      disableOutsidePointerEvents: true,
-      onCloseAutoFocus: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onCloseAutoFocus, (event) => {
-        var _context$triggerRef$c;
-        event.preventDefault();
-        (_context$triggerRef$c = context.triggerRef.current) === null || _context$triggerRef$c === void 0 || _context$triggerRef$c.focus();
-      }),
-      onPointerDownOutside: $e42e1063c40fb3ef$export$b9ecd428b558ff10(props.onPointerDownOutside, (event) => {
-        const originalEvent = event.detail.originalEvent;
-        const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true;
-        const isRightClick = originalEvent.button === 2 || ctrlLeftClick;
-        if (isRightClick)
-          event.preventDefault();
-      }),
-      onFocusOutside: $e42e1063c40fb3ef$export$b9ecd428b558ff10(
-        props.onFocusOutside,
-        (event) => event.preventDefault()
-      )
-    }));
-  });
-  const $5d3850c4d0b4e6c7$var$DialogContentNonModal = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, props.__scopeDialog);
-    const hasInteractedOutsideRef = _$1(false);
-    return /* @__PURE__ */ y$6($5d3850c4d0b4e6c7$var$DialogContentImpl, _extends({}, props, {
-      ref: forwardedRef,
-      trapFocus: false,
-      disableOutsidePointerEvents: false,
-      onCloseAutoFocus: (event) => {
-        var _props$onCloseAutoFoc;
-        (_props$onCloseAutoFoc = props.onCloseAutoFocus) === null || _props$onCloseAutoFoc === void 0 || _props$onCloseAutoFoc.call(props, event);
-        if (!event.defaultPrevented) {
-          var _context$triggerRef$c2;
-          if (!hasInteractedOutsideRef.current)
-            (_context$triggerRef$c2 = context.triggerRef.current) === null || _context$triggerRef$c2 === void 0 || _context$triggerRef$c2.focus();
-          event.preventDefault();
-        }
-        hasInteractedOutsideRef.current = false;
-      },
-      onInteractOutside: (event) => {
-        var _props$onInteractOuts, _context$triggerRef$c3;
-        (_props$onInteractOuts = props.onInteractOutside) === null || _props$onInteractOuts === void 0 || _props$onInteractOuts.call(props, event);
-        if (!event.defaultPrevented)
-          hasInteractedOutsideRef.current = true;
-        const target = event.target;
-        const targetIsTrigger = (_context$triggerRef$c3 = context.triggerRef.current) === null || _context$triggerRef$c3 === void 0 ? void 0 : _context$triggerRef$c3.contains(target);
-        if (targetIsTrigger)
-          event.preventDefault();
-      }
-    }));
-  });
-  const $5d3850c4d0b4e6c7$var$DialogContentImpl = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CONTENT_NAME, __scopeDialog);
-    const contentRef = _$1(null);
-    const composedRefs = $6ed0406888f73fc4$export$c7b2cbe3552a0d05(forwardedRef, contentRef);
-    $3db38b7d1fb3fe6a$export$b7ece24a22aeda8c();
-    return /* @__PURE__ */ y$6(k$3, null, /* @__PURE__ */ y$6($d3863c46a17e8a28$export$20e40289641fbbb6, {
-      asChild: true,
-      loop: true,
-      trapped: trapFocus,
-      onMountAutoFocus: onOpenAutoFocus,
-      onUnmountAutoFocus: onCloseAutoFocus
-    }, /* @__PURE__ */ y$6($5cb92bef7577960e$export$177fb62ff3ec1f22, _extends({
-      role: "dialog",
-      id: context.contentId,
-      "aria-describedby": context.descriptionId,
-      "aria-labelledby": context.titleId,
-      "data-state": $5d3850c4d0b4e6c7$var$getState(context.open)
-    }, contentProps, {
-      ref: composedRefs,
-      onDismiss: () => context.onOpenChange(false)
-    }))), false);
-  });
-  const $5d3850c4d0b4e6c7$var$TITLE_NAME = "DialogTitle";
-  const $5d3850c4d0b4e6c7$export$16f7638e4a34b909 = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { __scopeDialog, ...titleProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$TITLE_NAME, __scopeDialog);
-    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.h2, _extends({
-      id: context.titleId
-    }, titleProps, {
-      ref: forwardedRef
-    }));
-  });
-  const $5d3850c4d0b4e6c7$var$CLOSE_NAME = "DialogClose";
-  const $5d3850c4d0b4e6c7$export$fba2fb7cd781b7ac = /* @__PURE__ */ k$1((props, forwardedRef) => {
-    const { __scopeDialog, ...closeProps } = props;
-    const context = $5d3850c4d0b4e6c7$var$useDialogContext($5d3850c4d0b4e6c7$var$CLOSE_NAME, __scopeDialog);
-    return /* @__PURE__ */ y$6($8927f6f2acc4f386$export$250ffa63cdc0d034.button, _extends({
-      type: "button"
-    }, closeProps, {
-      ref: forwardedRef,
-      onClick: $e42e1063c40fb3ef$export$b9ecd428b558ff10(
-        props.onClick,
-        () => context.onOpenChange(false)
-      )
-    }));
-  });
-  function $5d3850c4d0b4e6c7$var$getState(open) {
-    return open ? "open" : "closed";
-  }
-  const $5d3850c4d0b4e6c7$export$be92b6f5f03c0fe9 = $5d3850c4d0b4e6c7$export$3ddf2d174ce01153;
-  const $5d3850c4d0b4e6c7$export$41fb9f06171c75f4 = $5d3850c4d0b4e6c7$export$2e1e1122cf0cba88;
-  const $5d3850c4d0b4e6c7$export$602eac185826482c = $5d3850c4d0b4e6c7$export$dad7c95542bacce0;
-  const $5d3850c4d0b4e6c7$export$c6fdb837b070b4ff = $5d3850c4d0b4e6c7$export$bd1d06c79be19e17;
-  const $5d3850c4d0b4e6c7$export$7c6e2c02157bb7d2 = $5d3850c4d0b4e6c7$export$b6d9565de1e068cf;
-  const $5d3850c4d0b4e6c7$export$f99233281efd08a0 = $5d3850c4d0b4e6c7$export$16f7638e4a34b909;
-  const $5d3850c4d0b4e6c7$export$f39c2d165cd861fe = $5d3850c4d0b4e6c7$export$fba2fb7cd781b7ac;
   var eventemitter3 = { exports: {} };
   (function(module) {
     var has = Object.prototype.hasOwnProperty, prefix = "~";
@@ -21807,15 +21939,11 @@ ${content2}`;
       })
     });
   }
-  function IconCopy({
-    className,
-    style: style2
-  }) {
+  function IconCopy() {
     return o$5("svg", {
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: "0 0 512 512",
-      className,
-      style: style2,
+      className: "w-4 h-4",
       fill: "currentColor",
       children: o$5("path", {
         d: "M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"
@@ -21866,7 +21994,11 @@ ${content2}`;
     return o$5("svg", {
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: "0 0 24 24",
-      className: "w-4 h-4",
+      className: "w-5 h-5",
+      style: {
+        marginInline: "-2px",
+        marginTop: "2px"
+      },
       "stroke-width": "2",
       stroke: "currentColor",
       fill: "none",
@@ -21922,7 +22054,7 @@ ${content2}`;
   }
   function IconLoading({
     className,
-    style: style2
+    style
   }) {
     return o$5("span", {
       style: {
@@ -21934,7 +22066,7 @@ ${content2}`;
         className,
         style: {
           animation: "1.4s ease-in-out 0s infinite normal none running circularDash",
-          ...style2
+          ...style
         },
         fill: "none",
         stroke: "currentColor",
@@ -21985,13 +22117,13 @@ ${content2}`;
   }
   function IconTrash({
     className,
-    style: style2
+    style
   }) {
     return o$5("svg", {
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: "0 0 24 24",
       className,
-      style: style2,
+      style,
       fill: "none",
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -22012,13 +22144,13 @@ ${content2}`;
   }
   function IconUpload({
     className,
-    style: style2
+    style
   }) {
     return o$5("svg", {
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: "0 0 24 24",
       className,
-      style: style2,
+      style,
       fill: "none",
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -22091,9 +22223,6 @@ ${content2}`;
     format: defaultFormat,
     setFormat: (_24) => {
     },
-    exportOfficialJsonFormat: false,
-    setExportOfficialJsonFormat: (_24) => {
-    },
     enableTimestamp: false,
     setEnableTimestamp: (_24) => {
     },
@@ -22119,7 +22248,6 @@ ${content2}`;
     children
   }) => {
     const [format, setFormat] = useGMStorage(KEY_FILENAME_FORMAT, defaultFormat);
-    const [exportOfficialJsonFormat, setExportOfficialJsonFormat] = useGMStorage(KEY_OFFICIAL_JSON_FORMAT, false);
     const [enableTimestamp, setEnableTimestamp] = useGMStorage(KEY_TIMESTAMP_ENABLED, false);
     const [timeStamp24H, setTimeStamp24H] = useGMStorage(KEY_TIMESTAMP_24H, false);
     const [enableTimestampHTML, setEnableTimestampHTML] = useGMStorage(KEY_TIMESTAMP_HTML, false);
@@ -22135,8 +22263,6 @@ ${content2}`;
       value: {
         format,
         setFormat,
-        exportOfficialJsonFormat,
-        setExportOfficialJsonFormat,
         enableTimestamp,
         setEnableTimestamp,
         timeStamp24H,
@@ -22207,20 +22333,22 @@ ${content2}`;
     } = useTranslation();
     const {
       enableMeta,
-      exportMetaList,
-      exportOfficialJsonFormat
+      exportMetaList
     } = useSettingContext();
     const metaList = F$1(() => enableMeta ? exportMetaList : [], [enableMeta, exportMetaList]);
     const exportAllOptions = F$1(() => [{
       label: "Markdown",
       callback: exportAllToMarkdown
     }, {
-      label: "JSON",
-      callback: exportOfficialJsonFormat ? exportAllToOfficialJson : exportAllToJson
-    }, {
       label: "HTML",
       callback: exportAllToHtml
-    }], [exportOfficialJsonFormat]);
+    }, {
+      label: "JSON",
+      callback: exportAllToOfficialJson
+    }, {
+      label: "JSON (ZIP)",
+      callback: exportAllToJson
+    }], []);
     const fileInputRef = _$1(null);
     const [exportSource, setExportSource] = h$4("API");
     const [apiConversations, setApiConversations] = h$4([]);
@@ -22523,7 +22651,14 @@ ${content2}`;
       }
     } : void 0;
     return o$5("div", {
-      className: `menu-item flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm mb-2 flex-shrink-0 border border-white/20 ${className}`,
+      className: `
+            menu-item
+            flex flex-shrink-0 py-3 px-3 items-center gap-3 rounded-lg mb-2
+            bg-menu hover:bg-gray-500/10
+            transition-colors duration-200
+            text-menu text-sm
+            cursor-pointer
+            border border-menu ${className}`,
       onClick: handleClick,
       onTouchStart: handleClick,
       disabled,
@@ -22926,10 +23061,10 @@ ${content2}`;
         checked,
         onChange: onCheckedUpdate,
         "data-state": checked ? "checked" : "unchecked",
-        className: "bg-gray-200 radix-state-checked:bg-green-600 relative h-6 w-[42px] cursor-pointer rounded-full shrink-0",
+        className: "bg-gray-200 radix-state-checked:bg-green-600 relative h-[20px] w-[32px] cursor-pointer rounded-full shrink-0",
         children: o$5("span", {
           "data-state": checked ? "checked" : "unchecked",
-          className: "block h-5 w-5 rounded-full translate-x-0.5 transition-transform duration-100 will-change-transform radix-state-checked:translate-x-[19px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+          className: "block h-[16px] w-[16px] rounded-full translate-x-0.5 transition-transform duration-100 will-change-transform radix-state-checked:translate-x-[14px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
         })
       }), label && o$5("span", {
         className: "ml-3 text-sm font-medium text-gray-900 dark:text-gray-300",
@@ -22964,8 +23099,6 @@ ${content2}`;
       setEnableTimestampHTML,
       enableTimestampMarkdown,
       setEnableTimestampMarkdown,
-      exportOfficialJsonFormat,
-      setExportOfficialJsonFormat,
       enableMeta,
       setEnableMeta,
       exportMetaList,
@@ -23072,24 +23205,6 @@ ${content2}`;
                       children: preview
                     })]
                   })]
-                })]
-              })
-            }), o$5("div", {
-              className: "relative flex bg-white dark:bg-white/5 rounded p-4",
-              children: o$5("div", {
-                children: [o$5("dt", {
-                  className: "text-md font-medium text-gray-800 dark:text-white",
-                  children: t2("Export Format")
-                }), o$5("dd", {
-                  className: "text-sm text-gray-700 dark:text-gray-300",
-                  children: o$5("div", {
-                    className: "mt-2",
-                    children: o$5(Toggle, {
-                      label: t2("Export JSON Format Description"),
-                      checked: exportOfficialJsonFormat,
-                      onCheckedUpdate: setExportOfficialJsonFormat
-                    })
-                  })
                 })]
               })
             }), o$5("div", {
@@ -23259,11 +23374,11 @@ ${content2}`;
     } = useTranslation();
     const disabled = getHistoryDisabled();
     const [open, setOpen] = h$4(false);
+    const [jsonOpen, setJsonOpen] = h$4(false);
     const [exportOpen, setExportOpen] = h$4(false);
     const [settingOpen, setSettingOpen] = h$4(false);
     const {
       format,
-      exportOfficialJsonFormat,
       enableTimestamp,
       timeStamp24H,
       enableMeta,
@@ -23281,9 +23396,13 @@ ${content2}`;
     const onClickPng = T$4(() => exportToPng(format), [format]);
     const onClickMarkdown = T$4(() => exportToMarkdown(format, metaList), [format, metaList]);
     const onClickHtml = T$4(() => exportToHtml(format, metaList), [format, metaList]);
-    const onClickJSON = T$4(() => exportToJson(format, {
-      officialFormat: exportOfficialJsonFormat
-    }), [format, exportOfficialJsonFormat]);
+    const onClickJSON = T$4(() => {
+      setJsonOpen(true);
+      return true;
+    }, []);
+    const onClickOfficialJSON = T$4(() => exportToJson(format), [format]);
+    const onClickTavern = T$4(() => exportToTavern(format), [format]);
+    const onClickOoba = T$4(() => exportToOoba(format), [format]);
     const width = useWindowResize(() => window.innerWidth);
     const isMobile = width < 768;
     const Portal = isMobile ? "div" : $cef8881cdc69808e$export$602eac185826482c;
@@ -23316,9 +23435,14 @@ ${content2}`;
           })
         }), o$5(Portal, {
           container: isMobile ? container : document.body,
-          forceMount: open || settingOpen || exportOpen,
+          forceMount: open || jsonOpen || settingOpen || exportOpen,
           children: o$5($cef8881cdc69808e$export$7c6e2c02157bb7d2, {
-            className: isMobile ? "grid grid-cols-2 gap-x-1 px-1.5 pt-2 rounded bg-gray-900 shadow-md transition-opacity duration-200 animate-slideUp" : "grid grid-cols-2 gap-x-1 px-1.5 py-2 pb-0 rounded-md bg-gray-900 shadow-md transition-opacity duration-200 animate-fadeIn",
+            className: `
+                        grid grid-cols-2
+                        bg-menu
+                        border border-menu
+                        transition-opacity duration-200 shadow-md
+                        ${isMobile ? "gap-x-1 px-1.5 pt-2 rounded animate-slideUp" : "gap-x-1 px-1.5 py-2 pb-0 rounded-md animate-fadeIn"}`,
             style: {
               width: isMobile ? 316 : 268,
               left: -6,
@@ -23342,9 +23466,7 @@ ${content2}`;
             }), o$5(MenuItem, {
               text: t2("Copy Text"),
               successText: t2("Copied!"),
-              icon: () => o$5(IconCopy, {
-                className: "w-4 h-4"
-              }),
+              icon: IconCopy,
               className: "row-full",
               onClick: onClickText
             }), o$5(MenuItem, {
@@ -23362,11 +23484,46 @@ ${content2}`;
               icon: FileCode,
               className: "row-half",
               onClick: onClickHtml
-            }), o$5(MenuItem, {
-              text: t2("JSON"),
-              icon: IconJSON,
-              className: "row-half",
-              onClick: onClickJSON
+            }), o$5($5d3850c4d0b4e6c7$export$be92b6f5f03c0fe9, {
+              open: jsonOpen,
+              onOpenChange: setJsonOpen,
+              children: [o$5($5d3850c4d0b4e6c7$export$41fb9f06171c75f4, {
+                asChild: true,
+                children: o$5(MenuItem, {
+                  text: t2("JSON"),
+                  icon: IconJSON,
+                  className: "row-half",
+                  onClick: onClickJSON
+                })
+              }), o$5($5d3850c4d0b4e6c7$export$602eac185826482c, {
+                children: [o$5($5d3850c4d0b4e6c7$export$c6fdb837b070b4ff, {
+                  className: "DialogOverlay"
+                }), o$5($5d3850c4d0b4e6c7$export$7c6e2c02157bb7d2, {
+                  className: "DialogContent",
+                  style: {
+                    width: "320px"
+                  },
+                  children: [o$5($5d3850c4d0b4e6c7$export$f99233281efd08a0, {
+                    className: "DialogTitle",
+                    children: t2("JSON")
+                  }), o$5(MenuItem, {
+                    text: t2("OpenAI Official Format"),
+                    icon: IconCopy,
+                    className: "row-full",
+                    onClick: onClickOfficialJSON
+                  }), o$5(MenuItem, {
+                    text: "JSONL (TavernAI, SillyTavern)",
+                    icon: IconCopy,
+                    className: "row-full",
+                    onClick: onClickTavern
+                  }), o$5(MenuItem, {
+                    text: "Ooba (text-generation-webui)",
+                    icon: IconCopy,
+                    className: "row-full",
+                    onClick: onClickOoba
+                  })]
+                })]
+              })]
             }), o$5(ExportDialog, {
               format,
               open: exportOpen,
@@ -23381,7 +23538,11 @@ ${content2}`;
             }), !isMobile && o$5($cef8881cdc69808e$export$21b07c8f274aebd5, {
               width: "16",
               height: "8",
-              className: "text-gray-900 fill-current"
+              style: {
+                "fill": "var(--ce-menu-primary)",
+                "stroke": "var(--ce-border-light)",
+                "stoke-width": "2px"
+              }
             })]
           })
         })]
@@ -23424,7 +23585,6 @@ ${content2}`;
       }
       let chatId = "";
       sentinel.on('[role="presentation"]', async () => {
-        const threadContents = Array.from(document.querySelectorAll('main [data-testid^="conversation-turn-"] [data-message-id]'));
         const currentChatId = getChatIdFromUrl();
         if (!currentChatId || currentChatId === chatId)
           return;
@@ -23433,6 +23593,9 @@ ${content2}`;
         const {
           conversationNodes
         } = processConversation(rawConversation);
+        const threadContents = Array.from(document.querySelectorAll('main [data-testid^="conversation-turn-"] [data-message-id]'));
+        if (threadContents.length === 0)
+          return;
         threadContents.forEach((thread, index2) => {
           var _a, _b;
           const createTime = (_b = (_a = conversationNodes[index2]) == null ? void 0 : _a.message) == null ? void 0 : _b.create_time;
