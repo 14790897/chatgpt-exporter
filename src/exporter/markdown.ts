@@ -63,6 +63,8 @@ export async function exportAllToMarkdown(fileNameFormat: string, apiConversatio
     return true
 }
 
+const LatexRegex = /(\s\$\$.+\$\$\s|\s\$.+\$\s|\\\[.+\\\]|\\\(.+\\\))|(^\$$[\S\s]+^\$$)|(^\$\$[\S\s]+^\$\$$)/gm
+
 function conversationToMarkdown(conversation: ConversationResult, metaList?: ExportMeta[]) {
     const { id, title, model, modelSlug, createTime, updateTime, conversationNodes } = conversation
     const source = `${baseUrl}/c/${id}`
@@ -100,10 +102,10 @@ function conversationToMarkdown(conversation: ConversationResult, metaList?: Exp
         // Skip tool's intermediate message.
         if (message.author.role === 'tool') {
             if (
-            // HACK: we special case the content_type 'multimodal_text' here because it is used by
-            // the dalle tool to return the image result, and we do want to show that.
+                // HACK: we special case the content_type 'multimodal_text' here because it is used by
+                // the dalle tool to return the image result, and we do want to show that.
                 message.content.content_type !== 'multimodal_text'
-            // Code execution result with image
+                // Code execution result with image
             && !(
                 message.content.content_type === 'execution_output'
                 && message.metadata?.aggregate_result?.messages?.some(msg => msg.message_type === 'image')
@@ -125,25 +127,44 @@ function conversationToMarkdown(conversation: ConversationResult, metaList?: Exp
 
         const author = transformAuthor(message.author)
 
-        let postSteps: Array<(input: string) => string> = []
+        const postSteps: Array<(input: string) => string> = []
         if (message.author.role === 'assistant') {
-            postSteps = [...postSteps, input => transformFootNotes(input, message.metadata)]
+            postSteps.push(input => transformFootNotes(input, message.metadata))
         }
         // Only message from assistant will be reformatted
         if (message.author.role === 'assistant') {
-            postSteps = [...postSteps, (input) => {
+            postSteps.push((input) => {
+                // Replace mathematical formula annotation
+                input = input
+                    .replace(/^\\\[(.+)\\\]$/gm, '$$$$$1$$$$')
+                    .replace(/\\\[/g, '$')
+                    .replace(/\\\]/g, '$')
+                    .replace(/\\\(/g, '$')
+                    .replace(/\\\)/g, '$')
+
+                const matches = input.match(LatexRegex)
+
                 // Skip code block as the following steps can potentially break the code
-                if (!(/```/.test(input))) {
-                    // Replace mathematical formula annotation
-                    input = input
-                        .replace(/^\\\[(.+)\\\]$/gm, '$$$$$1$$$$')
-                        .replace(/\\\[/g, '$')
-                        .replace(/\\\]/g, '$')
-                        .replace(/\\\(/g, '$')
-                        .replace(/\\\)/g, '$')
+                const isCodeBlock = /```/.test(input)
+                if (!isCodeBlock && matches) {
+                    let index = 0
+                    input = input.replace(LatexRegex, () => {
+                        // Replace it with `╬${index}╬` to avoid markdown processor ruin the formula
+                        return `╬${index++}╬`
+                    })
                 }
-                return toMarkdown(fromMarkdown(input))
-            }]
+
+                let transformed = toMarkdown(fromMarkdown(input))
+
+                if (!isCodeBlock && matches) {
+                    // Replace `╬${index}╬` back to the original latex
+                    transformed = transformed.replace(/╬(\d+)╬/g, (_, index) => {
+                        return matches[+index]
+                    })
+                }
+
+                return transformed
+            })
         }
         const postProcess = (input: string) => postSteps.reduce((acc, fn) => fn(acc), input)
         const content = transformContent(message.content, message.metadata, postProcess)

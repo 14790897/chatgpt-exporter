@@ -1,5 +1,110 @@
 # Changelog
 
+## [2.25.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.6...userscript-v2.25.0) (2024-09-12)
+
+
+### Features
+
+* add russian lang support ([#255](https://github.com/pionxzh/chatgpt-exporter/issues/255)) ([2562d4a](https://github.com/pionxzh/chatgpt-exporter/commit/2562d4a36042d025f3d7fc1190618461fa0127ae))
+
+
+### Bug Fixes
+
+* handle hydration missing menu and style ([bf687da](https://github.com/pionxzh/chatgpt-exporter/commit/bf687da24ca62cb4146aac4aa7e4482c51ca5aa4))
+
+## [2.24.6](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.5...userscript-v2.24.6) (2024-09-08)
+
+
+### Bug Fixes
+
+* fix unexpected latex formula escape ([30f0b62](https://github.com/pionxzh/chatgpt-exporter/commit/30f0b623b306aff6ec5a2278207cf2481a609b85))
+
+## [2.24.5](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.4...userscript-v2.24.5) (2024-09-07)
+
+
+### Bug Fixes
+
+* adapt remix version and try to reduce call to session api ([950c8fc](https://github.com/pionxzh/chatgpt-exporter/commit/950c8fc7cf8c9c626ace90bee4a82b482c42a40c))
+* fix the script not working on share page ([64849a6](https://github.com/pionxzh/chatgpt-exporter/commit/64849a63161571316e54a3eb3034130b9a3ab736))
+* improve menu injection ([542c23d](https://github.com/pionxzh/chatgpt-exporter/commit/542c23da68672af507d8b17b8a5c452b33690cee))
+
+## [2.24.4](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.3...userscript-v2.24.4) (2024-06-29)
+
+
+### Bug Fixes
+
+* fix missing toggle style ([69d0deb](https://github.com/pionxzh/chatgpt-exporter/commit/69d0debbd1316f6219fc2b863649aaab0269b4fe))
+* improve language detection by respecting oai language setting ([6189cc0](https://github.com/pionxzh/chatgpt-exporter/commit/6189cc065c4242c40af6dab5d431de1361744f3b))
+* let html export's max width adapt to the screen size intead of the fixed 800px ([9249279](https://github.com/pionxzh/chatgpt-exporter/commit/92492792513b7a47e880c521e13ae9161f9528c3)), closes [#247](https://github.com/pionxzh/chatgpt-exporter/issues/247)
+
+## [2.24.3](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.2...userscript-v2.24.3) (2024-06-17)
+
+
+### Bug Fixes
+
+* handle empty dataUrl ([6c89be9](https://github.com/pionxzh/chatgpt-exporter/commit/6c89be9c1b97da0179f4595689fddfa587bc2509))
+* lint ([6cafb3c](https://github.com/pionxzh/chatgpt-exporter/commit/6cafb3ccd5d95cb849093f8a20292a691c876ea3))
+* lint ([722c752](https://github.com/pionxzh/chatgpt-exporter/commit/722c752bb9e52a59fde012ed90967b7df927b2ad))
+
+## [2.24.2](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.1...userscript-v2.24.2) (2024-06-17)
+
+
+### Bug Fixes
+
+* handle oversized screenshot on firefox ([ce2356e](https://github.com/pionxzh/chatgpt-exporter/commit/ce2356e17f280b5217ca5277ee1bbf07e8148638))
+
+## [2.24.1](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.24.0...userscript-v2.24.1) (2024-05-21)
+
+
+### Bug Fixes
+
+* add [@match](https://github.com/match) for new ChatGPT domain with query parameter ([e48c902](https://github.com/pionxzh/chatgpt-exporter/commit/e48c9020214e6f573959c5bbedceed62c7b37840))
+* support model name mapping for gpt-4o ([346e08f](https://github.com/pionxzh/chatgpt-exporter/commit/346e08fbfe09cf87ccf5f0d56719c59954621294))
+
+## [2.24.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.23.0...userscript-v2.24.0) (2024-05-18)
+
+
+### Features
+
+* support new.oaifree.com ([6bf6ae0](https://github.com/pionxzh/chatgpt-exporter/commit/6bf6ae0b928a91c9af30be21c3aea16fe19a6816)), closes [#236](https://github.com/pionxzh/chatgpt-exporter/issues/236)
+
+## [2.23.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.22.1...userscript-v2.23.0) (2024-05-04)
+
+
+### Features
+
+* support chatgpt.com ([07bcf0b](https://github.com/pionxzh/chatgpt-exporter/commit/07bcf0b30f96d4157915eb88d220ddf11923f21c)), closes [#232](https://github.com/pionxzh/chatgpt-exporter/issues/232)
+
+## [2.22.1](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.22.0...userscript-v2.22.1) (2024-04-23)
+
+
+### Bug Fixes
+
+* try fix team workspace authentication issue ([1b9d3c1](https://github.com/pionxzh/chatgpt-exporter/commit/1b9d3c13566a8c768990028229ef5082cb1b3a2d))
+
+## [2.22.0](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.21.2...userscript-v2.22.0) (2024-04-04)
+
+
+### Features
+
+* try support team account ([7937b05](https://github.com/pionxzh/chatgpt-exporter/commit/7937b051bb7cca94053ee2f34054989ad7e4bb24))
+
+
+### Bug Fixes
+
+* fix characters overlap in screenshot ([aef813c](https://github.com/pionxzh/chatgpt-exporter/commit/aef813c2a0bfff66e8c37fdbfb08a6536446dd34)), closes [#216](https://github.com/pionxzh/chatgpt-exporter/issues/216)
+* hide feedback bar in screenshot ([3763ad7](https://github.com/pionxzh/chatgpt-exporter/commit/3763ad71ac90f0a1e0a35bd0a6a0d7f038cf843e))
+
+## [2.21.2](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.21.1...userscript-v2.21.2) (2024-03-30)
+
+
+### Bug Fixes
+
+* filter model memory context message ([a99c9f1](https://github.com/pionxzh/chatgpt-exporter/commit/a99c9f127b3bbdfc3b7d2b1e302a27af4bdaa39d))
+* remove HTML export odd child highlighting ([c3cd253](https://github.com/pionxzh/chatgpt-exporter/commit/c3cd2538f2c1c081783c325bcddcf17ac48ebbb7))
+* update HTML export colors to match ChatGPT UI ([646b3f5](https://github.com/pionxzh/chatgpt-exporter/commit/646b3f5a919330a43b9fba32d847347b80a34d6f))
+* update image export colors to match ChatGPT UI ([dbb7022](https://github.com/pionxzh/chatgpt-exporter/commit/dbb70228e4caf74bc32915207b071a205686c878))
+
 ## [2.21.1](https://github.com/pionxzh/chatgpt-exporter/compare/userscript-v2.21.0...userscript-v2.21.1) (2024-03-13)
 
 

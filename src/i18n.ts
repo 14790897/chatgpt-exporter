@@ -1,10 +1,11 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import { KEY_LANGUAGE } from './constants'
+import { KEY_LANGUAGE, KEY_OAI_LOCALE } from './constants'
 import en_US from './locales/en.json'
 import es from './locales/es.json'
 import id_ID from './locales/id.json'
 import ja_JP from './locales/jp.json'
+import ru from './locales/ru.json'
 import tr_TR from './locales/tr.json'
 import zh_Hans from './locales/zh-Hans.json'
 import zh_Hant from './locales/zh-Hant.json'
@@ -48,6 +49,12 @@ const JA_JP = {
     resource: ja_JP,
 }
 
+const RU = {
+    name: 'Русский',
+    code: 'ru',
+    resource: ru,
+}
+
 const TR_TR = {
     name: 'Türkçe',
     code: 'tr-TR',
@@ -71,6 +78,7 @@ export const LOCALES: Locale[] = [
     ES,
     ID_ID,
     JA_JP,
+    RU,
     TR_TR,
     ZH_Hans,
     ZH_Hant,
@@ -94,6 +102,9 @@ const LanguageMapping: Record<string, string> = {
     'ja': JA_JP.code,
     'ja-JP': JA_JP.code,
 
+    'ru': RU.code,
+    'ru-RU': RU.code,
+
     'tr': TR_TR.code,
     'tr-TR': TR_TR.code,
 
@@ -113,13 +124,15 @@ const resources = LOCALES.reduce<Record<string, { translation: Record<string, st
     return acc
 }, {})
 
-function standardizeLanguage(language: string) {
+function standardizeLanguage(language: string | null) {
+    if (!language) return null
+
     if (language in LanguageMapping) return LanguageMapping[language]
 
     const shortLang = language.split('-')[0]
     if (shortLang in LanguageMapping) return LanguageMapping[shortLang]
 
-    return language
+    return null
 }
 
 function getNavigatorLanguage() {
@@ -133,14 +146,20 @@ function getNavigatorLanguage() {
     return null
 }
 
+function getOaiLanguage() {
+    const storedLanguage = window?.localStorage?.getItem(KEY_OAI_LOCALE)
+    return storedLanguage?.replace(/^"(.*)"$/, '$1') ?? null
+}
+
 function getDefaultLanguage() {
     const storedLanguage = ScriptStorage.get<string>(KEY_LANGUAGE)
-    if (storedLanguage) return standardizeLanguage(storedLanguage)
-
+    const oaiLanguage = getOaiLanguage()
     const browserLanguage = getNavigatorLanguage()
-    if (browserLanguage) return standardizeLanguage(browserLanguage)
 
-    return EN_US.code
+    return standardizeLanguage(storedLanguage)
+        ?? standardizeLanguage(oaiLanguage)
+        ?? standardizeLanguage(browserLanguage)
+        ?? EN_US.code
 }
 
 i18n

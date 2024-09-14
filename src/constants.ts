@@ -1,5 +1,7 @@
 const API_MAPPING: Record<string, string> = {
     'https://chat.openai.com': 'https://chat.openai.com/backend-api',
+    'https://chatgpt.com': 'https://chatgpt.com/backend-api',
+    'https://new.oaifree.com': 'https://new.oaifree.com/backend-api',
 }
 
 // export const baseUrl = 'https://chat.openai.com'
@@ -14,3 +16,6 @@ export const KEY_TIMESTAMP_MARKDOWN = 'exporter:timestamp_markdown'
 export const KEY_TIMESTAMP_HTML = 'exporter:timestamp_html'
 export const KEY_META_ENABLED = 'exporter:enable_meta'
 export const KEY_META_LIST = 'exporter:meta_list'
+
+export const KEY_OAI_LOCALE = 'oai/apps/locale'
+export const KEY_OAI_HISTORY_DISABLED = 'oai/apps/historyDisabled'

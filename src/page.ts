@@ -1,4 +1,5 @@
 import { unsafeWindow } from 'vite-plugin-monkey/dist/client'
+import { KEY_OAI_HISTORY_DISABLED } from './constants'
 import { getBase64FromImageUrl, getBase64FromImg } from './utils/dom'
 
 declare global {
@@ -38,16 +39,53 @@ declare global {
                 }
             }
         }
+        __remixContext: {
+            basename: string
+            future: {}
+            state: {
+                loaderData: {
+                    root: {
+                        clientBootstrap: {
+                            accountStatus: null
+                            session: {
+                                accessToken: string
+                                authProvider: string
+                                expires: string
+                                user: {
+                                    email: string
+                                    group: unknown[]
+                                    id: string
+                                    image: string
+                                    intercom_hash: string
+                                    mfa: boolean
+                                    name: string
+                                    picture: string
+                                }
+                            }
+                        }
+                    }
+                    'routes/share.$shareId.($action)': {
+                        serverResponse: {
+                            type: 'data'
+                            data: any // Basically ApiConversation
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
-const historyDisabledKey = 'oai/apps/historyDisabled'
 export function getHistoryDisabled(): boolean {
-    return localStorage.getItem(historyDisabledKey) === '"true"'
+    return localStorage.getItem(KEY_OAI_HISTORY_DISABLED) === '"true"'
+}
+
+export function getPageAccessToken(): string | null {
+    return unsafeWindow?.__remixContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken ?? null
 }
 
 function getUserProfile() {
-    const user = unsafeWindow?.__NEXT_DATA__?.props?.pageProps?.user
+    const user = unsafeWindow?.__NEXT_DATA__?.props?.pageProps?.user ?? unsafeWindow?.__remixContext?.state?.loaderData?.root?.clientBootstrap?.session?.user
     if (!user) throw new Error('No user found.')
     return user
 }
@@ -71,6 +109,9 @@ export function getConversationFromSharePage() {
         // Next.js or OpenAI started to freeze some objects, so we do a
         // deep copy here to avoid polluting the original object
         return JSON.parse(JSON.stringify(window.__NEXT_DATA__.props.pageProps.serverResponse.data))
+    }
+    if (window.__remixContext?.state?.loaderData?.['routes/share.$shareId.($action)']?.serverResponse?.data) {
+        return JSON.parse(JSON.stringify(window.__remixContext.state.loaderData['routes/share.$shareId.($action)'].serverResponse.data))
     }
     return null
 }

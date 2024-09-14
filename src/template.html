@@ -13,30 +13,28 @@
 
     <style>
         :root {
-            --tw-prose-code: #111827;
-            --tw-prose-hr: #e5e7eb;
-            --tw-prose-links: #111827;
-            --tw-prose-headings: #111827;
-            --tw-prose-quotes: #111827;
-            --tw-prose-counters: #6b7280;
-            --page-bg: #f7f7f8;
-            --page-text: #374151;
-            --conversation-odd-bg: rgba(247,247,248);
-            --th-boarders: #4b5563;
-            --td-boarders: #374151;
+            --page-text: #0d0d0d;
+            --page-bg: #fff;
+            --td-borders: #374151;
+            --th-borders: #4b5563;
+            --tw-prose-code: var(--page-text);
+            --tw-prose-counters: #9b9b9b;
+            --tw-prose-headings: var(--page-text);
+            --tw-prose-hr: rgba(0,0,0,.25);
+            --tw-prose-links: var(--page-text);
+            --tw-prose-quotes: var(--page-text);
             --meta-title: #616c77;
         }
 
         [data-theme="dark"] {
-            --tw-prose-code: #f9fafb;
-            --tw-prose-hr: #374151;
-            --tw-prose-links: #fff;
-            --tw-prose-headings: #fff;
-            --tw-prose-quotes: #f3f4f6;
-            --tw-prose-counters: #9ca3af;
-            --page-bg: rgba(52,53,65);
-            --page-text: #fff;
-            --conversation-odd-bg: rgb(68,70,84);
+            --page-text: #ececec;
+            --page-bg: #212121;
+            --tw-prose-code: var(--page-text);
+            --tw-prose-counters: #9b9b9b;
+            --tw-prose-headings: var(--page-text);
+            --tw-prose-hr: hsla(0,0%,100%,.25);
+            --tw-prose-links: var(--page-text);
+            --tw-prose-quotes: var(--page-text);
             --meta-title: #959faa;
         }
 
@@ -290,7 +288,7 @@
         }
 
         table thead {
-            border-bottom-color: var(--th-boarders);
+            border-bottom-color: var(--th-borders);
             border-bottom-width: 1px;
         }
 
@@ -312,7 +310,7 @@
         }
 
         table tbody tr {
-            border-bottom-color: var(--td-boarders);
+            border-bottom-color: var(--td-borders);
             border-bottom-width: 1px;
         }
 
@@ -344,8 +342,25 @@
 
         .conversation {
             margin: 0 auto;
-            max-width: 800px;
             padding: 1rem;
+        }
+
+        @media (min-width: 1280px) {
+            .conversation {
+                max-width: 48rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .conversation {
+                max-width: 40rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .conversation {
+                max-width: 48rem;
+            }
         }
 
         .conversation-header {
@@ -381,10 +396,6 @@
 
         .conversation-item:first-of-type {
             border-top: 1px solid rgba(0,0,0,.1);
-        }
-
-        .conversation-item:nth-child(odd) {
-            background-color: var(--conversation-odd-bg);
         }
 
         .author {

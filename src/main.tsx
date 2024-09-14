@@ -8,26 +8,31 @@ import { onloadSafe } from './utils/utils'
 import './i18n'
 import './styles/missing-tailwind.css'
 
+//  需要对其它网站生效的时候改为       // 检查页面是否包含ID为'prompt-textarea'的<textarea>元素
+// const promptTextarea = document.getElementById('prompt-textarea')
+// if (!promptTextarea) {
+//     return // 如果不存在，则不执行后续操作
+// }
+// const container = document.createElement('div')
+// // to overlap on the list section
+// container.style.zIndex = '20'
+// render(<Menu container={container} />, container)
 main()
-
 function main() {
     onloadSafe(() => {
-        // 检查页面是否包含ID为'prompt-textarea'的<textarea>元素
-        const promptTextarea = document.getElementById('prompt-textarea')
-        if (!promptTextarea) {
-            return // 如果不存在，则不执行后续操作
-        }
-        const container = document.createElement('div')
-        // to overlap on the list section
-        container.style.zIndex = '20'
-        render(<Menu container={container} />, container)
-
         const styleEl = document.createElement('style')
         styleEl.id = 'sentinel-css'
         document.head.append(styleEl)
 
-        sentinel.on('nav', (nav) => {
-            const chatList = document.querySelector('nav > div.overflow-y-auto, nav > div.overflow-y-hidden')
+        const injectionMap = new Map<HTMLElement, HTMLElement>()
+
+        const injectNavMenu = (nav: HTMLElement) => {
+            if (injectionMap.has(nav)) return
+
+            const container = getMenuContainer()
+            injectionMap.set(nav, container)
+
+            const chatList = nav.querySelector(':scope > div.overflow-y-auto, :scope > div.overflow-y-hidden')
             if (chatList) {
                 chatList.after(container)
             }
@@ -35,13 +40,26 @@ function main() {
                 // fallback to the bottom of the nav
                 nav.append(container)
             }
-        })
+        }
+
+        sentinel.on('nav', injectNavMenu)
+
+        setInterval(() => {
+            injectionMap.forEach((container, nav) => {
+                if (!nav.isConnected) {
+                    container.remove()
+                    injectionMap.delete(nav)
+                }
+            })
+
+            const navList = Array.from(document.querySelectorAll('nav')).filter(nav => !injectionMap.has(nav))
+            navList.forEach(injectNavMenu)
+        }, 300)
 
         // Support for share page
         if (isSharePage()) {
-            const continueUrl = `${location.href}/continue`
-            sentinel.on(`a[href="${continueUrl}"]`, (link) => {
-                link.after(container)
+            sentinel.on(`div[role="presentation"] > .w-full > div >.flex.w-full`, (target) => {
+                target.prepend(getMenuContainer())
             })
         }
 
@@ -80,4 +98,12 @@ function main() {
             })
         })
     })
+}
+
+function getMenuContainer() {
+    const container = document.createElement('div')
+    // to overlap on the list section
+    container.style.zIndex = '20'
+    render(<Menu container={container} />, container)
+    return container
 }
